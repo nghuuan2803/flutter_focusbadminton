@@ -1,0 +1,26 @@
+name: focus_badminton
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.6.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  google_maps_flutter: ^2.10.0
+  permission_handler: ^11.3.1
+  vector_math: ^2.1.4
+  http: ^1.3.0
+  google_sign_in: ^6.2.2
+  signalr_netcore: ^1.4.1
+  intl: ^0.20.2
+  
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true

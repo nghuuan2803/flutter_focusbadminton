@@ -1,3 +1,5 @@
+import 'package:focus_badminton/models/voucher.dart';
+
 import '../api_services/payment_service.dart';
 
 class BookingDTO {
@@ -46,6 +48,31 @@ class BookingDTO {
     this.status = 1,
     this.details,
   });
+
+  void applyVoucher(Voucher? voucher) {
+    if (voucher == null ||
+        voucher.isUsed ||
+        (voucher.expiry != null && voucher.expiry!.isBefore(DateTime.now()))) {
+      discount = 0.0;
+      voucherId = null;
+      return;
+    }
+
+    voucherId = voucher.id;
+    if (voucher.discountType == "Percent") {
+      discount = amount * (voucher.value / 100);
+      if (voucher.maximumValue > 0 && discount > voucher.maximumValue) {
+        discount = voucher.maximumValue;
+      }
+    } else {
+      discount = voucher.value; // Giả sử là giá trị cố định
+      if (voucher.maximumValue > 0 && discount > voucher.maximumValue) {
+        discount = voucher.maximumValue;
+      }
+    }
+    // Đảm bảo discount không vượt quá amount
+    if (discount > amount) discount = amount;
+  }
 
   Map<String, dynamic> toJson() => {
         'Id': id,

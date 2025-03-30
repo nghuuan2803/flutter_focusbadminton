@@ -12,42 +12,49 @@ class Login extends StatefulWidget {
 
 class _Login extends State<Login> {
   final AuthService _authService = AuthService();
-  final _phoneController =
-      TextEditingController(); // Controller cho số điện thoại
-  final _passwordController =
-      TextEditingController(); // Controller cho mật khẩu
+  final _identifierController =
+      TextEditingController(); // Thay vì _phoneController
+  final _passwordController = TextEditingController();
   bool isObscure = true;
-  bool _isLoading = false; // Trạng thái loading
+  bool _isLoading = false;
 
   Future<void> _loginWithPassword() async {
     setState(() => _isLoading = true);
-    final phoneNumber = _phoneController.text.trim();
+    final identifier =
+        _identifierController.text.trim(); // Email hoặc số điện thoại
     final password = _passwordController.text.trim();
 
-    if (phoneNumber.isEmpty || password.isEmpty) {
+    if (identifier.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Vui lòng nhập số điện thoại và mật khẩu")),
+        const SnackBar(
+            content: Text("Vui lòng nhập email/số điện thoại và mật khẩu")),
       );
       setState(() => _isLoading = false);
       return;
     }
 
-    bool success = await _authService.passwordSignIn(phoneNumber, password);
+    bool success = await _authService.passwordSignIn(identifier, password);
     setState(() => _isLoading = false);
 
     if (success) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-            builder: (context) => MainScreen()), // Chuyển đến ProfileScreen
+        MaterialPageRoute(builder: (context) => const MainScreen()),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(
-                "Đăng nhập thất bại. Kiểm tra số điện thoại hoặc mật khẩu")),
+        const SnackBar(
+          content: Text("Đăng nhập thất bại. Kiểm tra thông tin đăng nhập"),
+        ),
       );
     }
+  }
+
+  @override
+  void dispose() {
+    _identifierController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
   @override
@@ -68,7 +75,7 @@ class _Login extends State<Login> {
                 ),
               ),
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
                 child: Center(
                   child: Container(
                     width: double.infinity,
@@ -91,7 +98,7 @@ class _Login extends State<Login> {
                         Padding(
                           padding: const EdgeInsets.all(8),
                           child: _isLoading
-                              ? Center(child: CircularProgressIndicator())
+                              ? const Center(child: CircularProgressIndicator())
                               : Column(
                                   children: [
                                     const Text(
@@ -103,25 +110,25 @@ class _Login extends State<Login> {
                                     const SizedBox(height: 8),
                                     Theme(
                                       data: ThemeData(
-                                        colorScheme: ColorScheme.light(
+                                        colorScheme: const ColorScheme.light(
                                           primary:
                                               Color.fromRGBO(0, 115, 177, 1.0),
                                         ),
                                       ),
                                       child: TextField(
-                                        controller: _phoneController,
-                                        cursorColor:
-                                            Color.fromRGBO(0, 115, 177, 1.0),
+                                        controller: _identifierController,
+                                        cursorColor: const Color.fromRGBO(
+                                            0, 115, 177, 1.0),
                                         keyboardType: TextInputType
-                                            .phone, // Đảm bảo bàn phím số
-                                        decoration: InputDecoration(
+                                            .text, // Cho phép nhập cả email và số
+                                        decoration: const InputDecoration(
                                           prefixIcon:
-                                              const Icon(Icons.phone_outlined),
-                                          labelText: 'Số điện thoại',
-                                          border: const OutlineInputBorder(),
+                                              Icon(Icons.person_outline),
+                                          labelText: 'Email hoặc số điện thoại',
+                                          border: OutlineInputBorder(),
                                           focusedBorder: OutlineInputBorder(
                                             borderSide: BorderSide(
-                                              color: const Color.fromRGBO(
+                                              color: Color.fromRGBO(
                                                   0, 115, 177, 1.0),
                                               width: 2.0,
                                             ),
@@ -132,7 +139,7 @@ class _Login extends State<Login> {
                                     const SizedBox(height: 16),
                                     Theme(
                                       data: ThemeData(
-                                        colorScheme: ColorScheme.light(
+                                        colorScheme: const ColorScheme.light(
                                           primary:
                                               Color.fromRGBO(0, 115, 177, 1.0),
                                         ),
@@ -141,23 +148,23 @@ class _Login extends State<Login> {
                                         builder: (context, setState) =>
                                             TextField(
                                           controller: _passwordController,
-                                          cursorColor:
-                                              Color.fromRGBO(0, 115, 177, 1.0),
+                                          cursorColor: const Color.fromRGBO(
+                                              0, 115, 177, 1.0),
                                           obscureText: isObscure,
                                           decoration: InputDecoration(
-                                            prefixIcon: Icon(
+                                            prefixIcon: const Icon(
                                               Icons.password_outlined,
                                               color: Color.fromRGBO(
                                                   0, 115, 177, 1.0),
                                             ),
                                             labelText: 'Nhập mật khẩu',
-                                            border: OutlineInputBorder(),
+                                            border: const OutlineInputBorder(),
                                             suffixIcon: IconButton(
                                               icon: Icon(
                                                 isObscure
                                                     ? Icons.visibility_off
                                                     : Icons.visibility,
-                                                color: Color.fromRGBO(
+                                                color: const Color.fromRGBO(
                                                     0, 115, 177, 1.0),
                                               ),
                                               onPressed: () {
@@ -175,8 +182,8 @@ class _Login extends State<Login> {
                                         onPressed: () {
                                           // Xử lý quên mật khẩu sau
                                         },
-                                        child: Text(
-                                          "Quên mật khẩu ?",
+                                        child: const Text(
+                                          "Quên mật khẩu?",
                                           style: TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.bold,
@@ -202,8 +209,7 @@ class _Login extends State<Login> {
                                         borderRadius: BorderRadius.circular(6),
                                       ),
                                       child: ElevatedButton(
-                                        onPressed:
-                                            _loginWithPassword, // Gọi hàm đăng nhập
+                                        onPressed: _loginWithPassword,
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: Colors.transparent,
                                           shadowColor: Colors.transparent,
@@ -213,7 +219,7 @@ class _Login extends State<Login> {
                                                 BorderRadius.circular(6),
                                           ),
                                         ),
-                                        child: Text(
+                                        child: const Text(
                                           "Đăng nhập",
                                           style: TextStyle(
                                             fontSize: 18,
@@ -224,7 +230,7 @@ class _Login extends State<Login> {
                                       ),
                                     ),
                                     Padding(
-                                      padding: EdgeInsets.all(8),
+                                      padding: const EdgeInsets.all(8),
                                       child: Container(
                                         width: double.infinity,
                                         height: 50,
@@ -237,13 +243,14 @@ class _Login extends State<Login> {
                                                 context,
                                                 MaterialPageRoute(
                                                     builder: (context) =>
-                                                        MainScreen()),
+                                                        const MainScreen()),
                                               );
                                             }
                                           },
                                           style: ElevatedButton.styleFrom(
-                                            backgroundColor: Color.fromARGB(
-                                                255, 255, 255, 255),
+                                            backgroundColor:
+                                                const Color.fromARGB(
+                                                    255, 255, 255, 255),
                                             padding: EdgeInsets.zero,
                                             shape: RoundedRectangleBorder(
                                               borderRadius:
@@ -254,13 +261,13 @@ class _Login extends State<Login> {
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.center,
                                             children: [
-                                              SizedBox(width: 8),
+                                              const SizedBox(width: 8),
                                               Image.asset(
                                                 "assets/images/google.png",
                                                 width: 30,
                                                 height: 30,
                                               ),
-                                              Expanded(
+                                              const Expanded(
                                                 child: Center(
                                                   child: Text(
                                                     "Đăng nhập với Google",
@@ -273,7 +280,7 @@ class _Login extends State<Login> {
                                                   ),
                                                 ),
                                               ),
-                                              SizedBox(width: 32),
+                                              const SizedBox(width: 32),
                                             ],
                                           ),
                                         ),
@@ -288,7 +295,7 @@ class _Login extends State<Login> {
                                         mainAxisAlignment:
                                             MainAxisAlignment.center,
                                         children: [
-                                          Text(
+                                          const Text(
                                             "Bạn chưa có tài khoản?",
                                             style: TextStyle(
                                                 fontSize: 16,
@@ -300,10 +307,10 @@ class _Login extends State<Login> {
                                                 context,
                                                 MaterialPageRoute(
                                                     builder: (context) =>
-                                                        Register()),
+                                                        const Register()),
                                               );
                                             },
-                                            child: Text(
+                                            child: const Text(
                                               "Đăng ký",
                                               style: TextStyle(
                                                 fontSize: 14,

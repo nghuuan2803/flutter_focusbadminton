@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:focus_badminton/api_services/vouchers_service.dart';
-import '../models/voucher_template.dart';
+import '../models/voucher.dart'; // Chỉ cần import Voucher
 import 'package:focus_badminton/screens/fixed_booking_screen.dart';
 import 'package:focus_badminton/screens/schedule_screen.dart';
 
@@ -34,8 +34,8 @@ class VouchersScreen extends StatelessWidget {
           slivers: [
             SliverPadding(
               padding: EdgeInsets.all(screenWidth * 0.04),
-              sliver: FutureBuilder<List<VoucherTemplate>>(
-                future: voucherService.getVoucherTemplates(),
+              sliver: FutureBuilder<List<Voucher>>(
+                future: voucherService.getVouchers(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return SliverToBoxAdapter(
@@ -51,15 +51,13 @@ class VouchersScreen extends StatelessWidget {
                     );
                   }
 
-                  final voucherTemplates = snapshot.data!;
+                  final vouchers =
+                      snapshot.data!; // Sửa tên biến và bỏ dấu chấm thừa
                   return SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (context, index) => _buildVoucherCard(
-                          voucherTemplates[index],
-                          screenWidth,
-                          screenHeight,
-                          context),
-                      childCount: voucherTemplates.length,
+                          vouchers[index], screenWidth, screenHeight, context),
+                      childCount: vouchers.length,
                     ),
                   );
                 },
@@ -85,7 +83,7 @@ class VouchersScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildVoucherCard(VoucherTemplate voucherTemplate, double screenWidth,
+  Widget _buildVoucherCard(Voucher voucher, double screenWidth,
       double screenHeight, BuildContext context) {
     return Container(
       margin: EdgeInsets.only(bottom: screenHeight * 0.02),
@@ -121,7 +119,7 @@ class VouchersScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  voucherTemplate.name,
+                  voucher.name,
                   style: TextStyle(
                     fontSize: screenWidth * 0.05,
                     fontWeight: FontWeight.bold,
@@ -130,7 +128,7 @@ class VouchersScreen extends StatelessWidget {
                 ),
                 SizedBox(height: screenHeight * 0.01),
                 Text(
-                  'Giá trị: ${voucherTemplate.value}',
+                  'Giá trị: ${voucher.value} (${voucher.discountType})',
                   style: TextStyle(
                     fontSize: screenWidth * 0.04,
                     color: Colors.black87,
@@ -138,7 +136,7 @@ class VouchersScreen extends StatelessWidget {
                 ),
                 SizedBox(height: screenHeight * 0.01),
                 Text(
-                  'Thời hạn: ${voucherTemplate.duration} ngày',
+                  'HSD: ${voucher.expiry != null ? voucher.expiry!.toString().substring(0, 10) : 'Không xác định'}',
                   style: TextStyle(
                     fontSize: screenWidth * 0.035,
                     color: Colors.red[600],
@@ -162,16 +160,15 @@ class VouchersScreen extends StatelessWidget {
               // Hiển thị bottom sheet với 2 lựa chọn
               showModalBottomSheet(
                 context: context,
-                isScrollControlled:
-                    true, // Cho phép bottom sheet chiếm toàn màn hình nếu cần
+                isScrollControlled: true,
                 shape: RoundedRectangleBorder(
                   borderRadius:
                       BorderRadius.vertical(top: Radius.circular(25.0)),
                 ),
                 builder: (context) => DraggableScrollableSheet(
-                  initialChildSize: 0.6, // Chiều cao ban đầu của bottom sheet
-                  minChildSize: 0.3, // Chiều cao tối thiểu
-                  maxChildSize: 0.9, // Chiều cao tối đa
+                  initialChildSize: 0.6,
+                  minChildSize: 0.3,
+                  maxChildSize: 0.9,
                   expand: false,
                   builder: (context, scrollController) {
                     return SingleChildScrollView(
@@ -206,7 +203,6 @@ class VouchersScreen extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Tiêu đề của bottom sheet
           Padding(
             padding: EdgeInsets.symmetric(vertical: screenHeight * 0.02),
             child: Text(
@@ -218,7 +214,6 @@ class VouchersScreen extends StatelessWidget {
               ),
             ),
           ),
-          // Đặt Sân Trong Ngày (type: 1)
           _buildServiceCard(
             title: 'Đặt Sân Trong Ngày',
             description:
@@ -226,7 +221,7 @@ class VouchersScreen extends StatelessWidget {
             icon: Icons.access_time,
             buttonText: 'Đặt Ngay',
             onPressed: () {
-              Navigator.pop(context); // Đóng bottom sheet
+              Navigator.pop(context);
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -239,7 +234,6 @@ class VouchersScreen extends StatelessWidget {
             isTablet: isTablet,
           ),
           SizedBox(height: screenHeight * 0.04),
-          // Đặt Sân Cố Định (type: 2)
           _buildServiceCard(
             title: 'Đặt Sân Cố Định',
             description:
@@ -247,7 +241,7 @@ class VouchersScreen extends StatelessWidget {
             icon: Icons.calendar_today,
             buttonText: 'Đặt Ngay',
             onPressed: () {
-              Navigator.pop(context); // Đóng bottom sheet
+              Navigator.pop(context);
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -259,7 +253,7 @@ class VouchersScreen extends StatelessWidget {
             screenHeight: screenHeight,
             isTablet: isTablet,
           ),
-          SizedBox(height: screenHeight * 0.02), // Khoảng cách dưới cùng
+          SizedBox(height: screenHeight * 0.02),
         ],
       ),
     );

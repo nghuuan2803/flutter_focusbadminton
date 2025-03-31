@@ -780,7 +780,7 @@ class _ScheduleScreenState extends State<ScheduleScreen>
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text('Slot đã chọn',
+                                  const Text('Lịch đã chọn',
                                       style: TextStyle(
                                           fontSize: 20,
                                           fontWeight: FontWeight.bold)),
@@ -789,7 +789,7 @@ class _ScheduleScreenState extends State<ScheduleScreen>
                                     const Padding(
                                       padding:
                                           EdgeInsets.symmetric(vertical: 8),
-                                      child: Text('Chưa có slot nào được chọn',
+                                      child: Text('Chưa chọn lịch',
                                           style: TextStyle(color: Colors.grey)),
                                     )
                                   else
@@ -1039,6 +1039,7 @@ class _ScheduleScreenState extends State<ScheduleScreen>
                                   ),
                                   const SizedBox(height: 20),
                                   SizedBox(
+                                    height: 45,
                                     width: double.infinity,
                                     child: ElevatedButton(
                                       onPressed: (selectedSlots.isEmpty ||
@@ -1051,10 +1052,10 @@ class _ScheduleScreenState extends State<ScheduleScreen>
                                         foregroundColor: Colors.white,
                                         backgroundColor: Colors.green,
                                         padding: const EdgeInsets.symmetric(
-                                            vertical: 16),
+                                            vertical: 8),
                                         shape: RoundedRectangleBorder(
                                             borderRadius:
-                                                BorderRadius.circular(10)),
+                                                BorderRadius.circular(8)),
                                         disabledBackgroundColor: Colors.grey,
                                       ),
                                       child: const Text('Thanh toán',
@@ -1336,6 +1337,9 @@ class _ScheduleScreenState extends State<ScheduleScreen>
                 ]),
               ],
             ),
+            SizedBox(
+              height: 16,
+            ),
             Expanded(
                 child: isLoading
                     ? const Center(child: CircularProgressIndicator())
@@ -1360,14 +1364,12 @@ class _ScheduleScreenState extends State<ScheduleScreen>
           'assets/images/vnpay.png',
           width: 24,
           height: 24,
-          color: color, // Tùy chọn: áp dụng màu nếu hình ảnh hỗ trợ
         );
       case PaymentMethod.momo:
         return Image.asset(
           'assets/images/momo.png',
           width: 24,
           height: 24,
-          color: color, // Tùy chọn: áp dụng màu nếu hình ảnh hỗ trợ
         );
       default:
         return Icon(Icons.payment, color: color, size: 24);

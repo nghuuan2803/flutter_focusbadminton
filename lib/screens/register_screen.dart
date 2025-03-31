@@ -100,7 +100,7 @@ class _RegisterState extends State<Register> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Padding(
-                padding: const EdgeInsets.only(top: 40),
+                padding: const EdgeInsets.only(top: 0),
                 child: Image.asset(
                   'assets/images/logo.png',
                   width: 200,
@@ -108,14 +108,13 @@ class _RegisterState extends State<Register> {
                 ),
               ),
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
                 child: Center(
                   child: Container(
                     width: double.infinity,
                     decoration: BoxDecoration(
                       color: AppColors.white,
-                      borderRadius: BorderRadius.circular(6),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -132,7 +131,7 @@ class _RegisterState extends State<Register> {
                           ],
                         ),
                         Padding(
-                          padding: const EdgeInsets.all(8),
+                          padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
                           child: Column(
                             children: [
                               const Text(

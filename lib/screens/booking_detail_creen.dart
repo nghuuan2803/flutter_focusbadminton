@@ -92,7 +92,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
       padding: const EdgeInsets.all(16.0),
       child: Card(
         elevation: 4,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -231,7 +231,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                             ),
                           ),
                           contentPadding:
-                              const EdgeInsets.symmetric(vertical: 4.0),
+                              const EdgeInsets.symmetric(vertical: 0),
                         ),
                         _buildInfoTile(
                           icon: Icons.calendar_month,
@@ -388,7 +388,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
           color: valueColor ?? Colors.black87,
         ),
       ),
-      contentPadding: const EdgeInsets.symmetric(vertical: 4.0),
+      contentPadding: const EdgeInsets.symmetric(vertical: 0),
     );
   }
 

@@ -365,7 +365,7 @@ class VouchersScreen extends StatelessWidget {
         backgroundColor: const Color.fromARGB(255, 127, 162, 215),
         elevation: 0,
         title: Text(
-          'Ưu Đãi & Voucher',
+          'Quà tặng & Ưu đãi',
           style: TextStyle(
             fontSize: isTablet ? 32 : 28,
             fontWeight: FontWeight.bold,

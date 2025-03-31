@@ -173,7 +173,7 @@ class HomeWidget extends StatelessWidget {
                   Container(
                     height: 122,
                     child: FutureBuilder<List<Voucher>>(
-                      future: voucherService.getVouchers(),
+                      future: voucherService.getVouchers(1),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState ==
                             ConnectionState.waiting) {

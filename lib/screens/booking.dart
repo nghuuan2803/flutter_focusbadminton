@@ -163,7 +163,8 @@ class SelectBookingType extends StatelessWidget {
     return SingleChildScrollView(
       // Thêm scroll để chống vỡ giao diện
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.02),
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        // padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.02),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -182,7 +183,7 @@ class SelectBookingType extends StatelessWidget {
             ),
             // Bảng giá
             _buildPriceTable(screenWidth, screenHeight, isTablet),
-            SizedBox(height: screenHeight * 0.04),
+            SizedBox(height: 16),
             // Đặt Sân Trong Ngày (type: 1)
             _buildServiceCard(
               title: 'Đặt Sân Trong Ngày',
@@ -202,7 +203,8 @@ class SelectBookingType extends StatelessWidget {
               screenHeight: screenHeight,
               isTablet: isTablet,
             ),
-            SizedBox(height: screenHeight * 0.04),
+            SizedBox(height: 16),
+            // SizedBox(height: screenHeight * 0.04),
             // Đặt Sân Cố Định (type: 2)
             _buildServiceCard(
               title: 'Đặt Sân Cố Định',
@@ -234,25 +236,25 @@ class SelectBookingType extends StatelessWidget {
     // Dữ liệu bảng giá (có thể thay đổi theo yêu cầu)
     final List<Map<String, String>> priceData = [
       {
-        'day': 'Thứ 2 - Thứ 6',
+        'day': 'T2 - T6',
         'time': '6:00 - 17:00',
         'fixed': '80.000đ',
         'casual': '100.000đ'
       },
       {
-        'day': 'Thứ 2 - Thứ 6',
+        'day': 'T2 - T6',
         'time': '17:00 - 22:00',
         'fixed': '120.000đ',
         'casual': '150.000đ'
       },
       {
-        'day': 'Thứ 7 - CN',
+        'day': 'T7 - CN',
         'time': '6:00 - 17:00',
         'fixed': '100.000đ',
         'casual': '120.000đ'
       },
       {
-        'day': 'Thứ 7 - CN',
+        'day': 'T7 - CN',
         'time': '17:00 - 22:00',
         'fixed': '150.000đ',
         'casual': '180.000đ'
@@ -353,10 +355,11 @@ class SelectBookingType extends StatelessWidget {
   }) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(screenWidth * 0.05),
+      padding: EdgeInsets.all(16),
+      // padding: EdgeInsets.all(screenWidth * 0.05),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(25),
+        borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
@@ -392,7 +395,7 @@ class SelectBookingType extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: screenHeight * 0.02),
+          SizedBox(height: 8),
           Text(
             description,
             style: TextStyle(
@@ -400,15 +403,16 @@ class SelectBookingType extends StatelessWidget {
               color: Colors.grey[700],
             ),
           ),
-          SizedBox(height: screenHeight * 0.03),
+          SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
+            height: 45,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue[700],
-                padding: EdgeInsets.symmetric(vertical: screenHeight * 0.02),
+                backgroundColor: const Color.fromARGB(255, 58, 143, 228),
+                // padding: EdgeInsets.symmetric(vertical: screenHeight * 0.02),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
+                  borderRadius: BorderRadius.circular(10),
                 ),
               ),
               onPressed: onPressed,

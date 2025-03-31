@@ -1030,6 +1030,13 @@ class _FixedBookingScreenState extends State<FixedBookingScreen>
                     showCheckmark: true,
                     label: Text(_getVnDay(day)),
                     selected: isSelected,
+                    selectedColor: const Color.fromARGB(
+                        255, 89, 146, 192), // Màu xanh khi được chọn
+                    labelStyle: TextStyle(
+                      color: isSelected
+                          ? Colors.white
+                          : Colors.black, // Đổi màu chữ cho dễ đọc
+                    ),
                     onSelected: (selected) {
                       setState(() {
                         if (selected) {
@@ -1048,6 +1055,13 @@ class _FixedBookingScreenState extends State<FixedBookingScreen>
                   showCheckmark: false,
                   label: const Text('Tất cả'),
                   selected: _selectedDays.length == _daysOfWeek.length,
+                  selectedColor: const Color.fromARGB(
+                      255, 32, 98, 149), // Màu xanh khi được chọn
+                  labelStyle: TextStyle(
+                    color: _selectedDays.length == _daysOfWeek.length
+                        ? Colors.white
+                        : Colors.black, // Đổi màu chữ
+                  ),
                   onSelected: (selected) {
                     setState(() {
                       if (selected) {
@@ -1070,10 +1084,16 @@ class _FixedBookingScreenState extends State<FixedBookingScreen>
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 40),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(5),
+                    borderRadius: BorderRadius.circular(8),
                   ),
+                  backgroundColor: Colors.blue, // Đổi màu nền thành xanh
                 ),
-                child: const Text('Chọn lịch'),
+                child: const Text(
+                  'Tiếp tục',
+                  style: TextStyle(
+                      color:
+                          Colors.white), // Đổi màu chữ thành trắng cho dễ đọc
+                ),
               ),
             ),
             const SizedBox(height: 20),
@@ -1081,7 +1101,7 @@ class _FixedBookingScreenState extends State<FixedBookingScreen>
               Text('Chọn khung giờ:',
                   style: Theme.of(context).textTheme.titleMedium),
               SizedBox(
-                height: 300,
+                height: 250,
                 child: SingleChildScrollView(
                   child: Wrap(
                     spacing: 8.0,
@@ -1157,10 +1177,15 @@ class _FixedBookingScreenState extends State<FixedBookingScreen>
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size(double.infinity, 40),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(8),
                     ),
+                    backgroundColor: Colors.blue, // Đổi màu nền thành xanh
                   ),
-                  child: const Text('Đặt sân'),
+                  child: const Text(
+                    'Thanh toán',
+                    style: TextStyle(
+                        color: Colors.white), // Đổi màu chữ thành trắng
+                  ),
                 ),
               ),
             ],

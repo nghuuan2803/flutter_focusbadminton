@@ -230,7 +230,8 @@ class _Login extends State<Login> {
                                       ),
                                     ),
                                     Padding(
-                                      padding: const EdgeInsets.all(8),
+                                      padding: const EdgeInsets.fromLTRB(
+                                          0, 16, 0, 16),
                                       child: Container(
                                         width: double.infinity,
                                         height: 50,

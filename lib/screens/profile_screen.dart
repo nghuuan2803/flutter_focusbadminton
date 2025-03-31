@@ -84,7 +84,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   decoration: const BoxDecoration(
                     color: Colors.white,
                     borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(30)),
+                        BorderRadius.vertical(top: Radius.circular(16)),
                   ),
                   child: Padding(
                     padding: EdgeInsets.all(screenWidth * 0.04),
@@ -115,6 +115,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           screenWidth: screenWidth,
                         ),
                         _buildOptionTile(
+                          icon: Icons.group,
+                          title: 'Đội Nhóm',
+                          onTap: () {},
+                          screenWidth: screenWidth,
+                        ),
+                        _buildOptionTile(
                           icon: Icons.history,
                           title: 'Lịch Sử Đặt Sân',
                           onTap: () {
@@ -135,12 +141,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           onTap: () {},
                           screenWidth: screenWidth,
                         ),
-                        _buildOptionTile(
-                          icon: Icons.card_giftcard,
-                          title: 'Ưu Đãi Của Tôi',
-                          onTap: () {},
-                          screenWidth: screenWidth,
-                        ),
                         SizedBox(height: screenHeight * 0.03),
                         Text(
                           'Thống Kê',
@@ -154,22 +154,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: [
-                            _buildStatCard('Sân Đã Đặt', '12',
+                            _buildStatCard('Điểm tích lũy', '7900',
                                 Icons.sports_tennis, screenWidth),
                             _buildStatCard(
-                                'Giờ Chơi', '25h', Icons.timer, screenWidth),
+                                'Giờ Chơi', '129h', Icons.timer, screenWidth),
                           ],
                         ),
                         SizedBox(height: screenHeight * 0.03),
                         SizedBox(
+                          height: 45,
                           width: double.infinity,
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.red[600],
                               padding: EdgeInsets.symmetric(
-                                  vertical: screenHeight * 0.02),
+                                  vertical: screenHeight * 0.01),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(15),
+                                borderRadius: BorderRadius.circular(10),
                               ),
                             ),
                             onPressed: () async {
@@ -451,13 +452,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       padding: EdgeInsets.all(screenWidth * 0.04),
       decoration: BoxDecoration(
         color: Colors.blue[50],
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 5,
-              spreadRadius: 1),
-        ],
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         children: [

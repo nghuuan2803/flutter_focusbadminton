@@ -7,10 +7,11 @@ import 'package:http/http.dart' as http;
 class GoogleSignInService {
   static final _googleSignIn = GoogleSignIn(
       clientId:
-          '568380109802-5jch3b2fep6kjkse5aj554m4gkloh647.apps.googleusercontent.com',
-      //'463299174196-umpv1mo3frgasib9li1g2i15190qd5t7.apps.googleusercontent.com',
-      serverClientId: '568380109802-dtu6hse617l9bs7dg0tn9me2fl3tvau4.apps.googleusercontent.com',
-      //'463299174196-388krapsu38nbmg6r846rl4opg1f12ua.apps.googleusercontent.com',
+          // '568380109802-5jch3b2fep6kjkse5aj554m4gkloh647.apps.googleusercontent.com',
+          '463299174196-umpv1mo3frgasib9li1g2i15190qd5t7.apps.googleusercontent.com',
+      serverClientId:
+          //  '568380109802-dtu6hse617l9bs7dg0tn9me2fl3tvau4.apps.googleusercontent.com',
+          '463299174196-388krapsu38nbmg6r846rl4opg1f12ua.apps.googleusercontent.com',
       // scopes: ['email', 'profile']);
       scopes: ['email', 'profile', 'openid']);
   static Future<GoogleSignInAccount?> login() => _googleSignIn.signIn();

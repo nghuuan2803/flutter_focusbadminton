@@ -1,6 +1,6 @@
 class Constants {
   static const String baseUrl =
-      "https://6ae9-2402-800-631c-7e3b-b494-8217-485c-1bd5.ngrok-free.app/"; // Thay bằng URL thật
+      "https://2563-2402-800-631c-7e3b-7977-b1d4-3cdb-e79e.ngrok-free.app/"; // Thay bằng URL thật
   static const Map<int, String> statusText = {
     0: "Quá giờ",
     1: "Trống",

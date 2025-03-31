@@ -16,36 +16,34 @@ enum PaymentMethod {
 }
 
 class PaymentService {
-  Future<void> processPayment(
-      {required int bookingId,
-      required double amount,
-      required double deposit,
-      required PaymentMethod method,
-      String? paymentLink}) async {
+  Future<void> processPayment({
+    required int bookingId,
+    required double amount,
+    required double deposit,
+    required PaymentMethod method,
+    String? paymentLink,
+  }) async {
     try {
       debugPrint(
-          "PaymentService Step 1: Processing - BookingId: $bookingId, Amount: $amount, Deposit: $deposit, Method: ${method.name}, PyamentLink: $paymentLink");
-
-      // Không gọi POST lại /api/bookings, vì booking đã được tạo
+          "Processing - BookingId: $bookingId, Method: ${method.name}, PaymentLink: $paymentLink");
       switch (method) {
         case PaymentMethod.momo:
         case PaymentMethod.vnPay:
-          final paymentUrl = paymentLink;
-          if (paymentUrl != null && await canLaunchUrl(Uri.parse(paymentUrl))) {
-            debugPrint("PaymentService Step 2: Launching URL: $paymentUrl");
-            await launchUrl(Uri.parse(paymentUrl));
+          if (paymentLink != null &&
+              await canLaunchUrl(Uri.parse(paymentLink))) {
+            debugPrint("Launching URL: $paymentLink");
+            await launchUrl(Uri.parse(paymentLink));
           } else {
-            throw Exception('Unable to launch payment URL: $paymentUrl');
+            throw Exception('Unable to launch URL: $paymentLink');
           }
           break;
         case PaymentMethod.cash:
         case PaymentMethod.bankTransfer:
-          debugPrint(
-              "PaymentService Step 2: Processed ${method.name} - No URL required");
+          debugPrint("Processed ${method.name} - No URL required");
           break;
       }
     } catch (e) {
-      debugPrint('PaymentService Step ERROR: Error processing payment: $e');
+      debugPrint('Error processing payment: $e');
       rethrow;
     }
   }

@@ -149,7 +149,7 @@
 // }
 import 'package:flutter/material.dart';
 import 'package:focus_badminton/screens/fixed_booking_screen.dart';
-import 'package:focus_badminton/screens/schedule_screen.dart';
+import 'package:focus_badminton/screens/inday_booking_screen.dart';
 
 class SelectBookingType extends StatelessWidget {
   const SelectBookingType({super.key});
@@ -195,7 +195,7 @@ class SelectBookingType extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => ScheduleScreen(courtId: 1),
+                    builder: (context) => InDayBookingScreen(courtId: 1),
                   ),
                 );
               },

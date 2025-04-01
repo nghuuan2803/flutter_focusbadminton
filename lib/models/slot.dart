@@ -1,4 +1,4 @@
-class Schedule {
+class Slot {
   final DateTime scheduleDate;
   final String? dayOfWeek;
   final int courtId;
@@ -12,7 +12,7 @@ class Schedule {
   final int? bookingId;
   final int? bookingDetailId;
 
-  Schedule({
+  Slot({
     required this.scheduleDate,
     this.dayOfWeek,
     required this.courtId,
@@ -27,8 +27,8 @@ class Schedule {
     this.bookingDetailId,
   });
 
-  factory Schedule.fromJson(Map<String, dynamic> json) {
-    return Schedule(
+  factory Slot.fromJson(Map<String, dynamic> json) {
+    return Slot(
       scheduleDate:
           DateTime.parse(json['scheduleDate']), // Key viết thường trong JSON
       dayOfWeek: json['dayOfWeek'],

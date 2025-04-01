@@ -1,13 +1,13 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../models/schedule.dart';
+import '../models/slot.dart';
 import '../utils/constants.dart';
 
 class ScheduleService {
   final String baseUrl = "${Constants.baseUrl}api";
 
   // Lấy lịch sân trong khoảng thời gian
-  Future<List<Schedule>> getCourtSchedulesInRange(
+  Future<List<Slot>> getCourtSchedulesInRange(
       int courtId, DateTime startDate, DateTime endDate) async {
     final url =
         '$baseUrl/schedules/court-range?CourtId=$courtId&StartDate=${_formatDate(startDate)}&EndDate=${_formatDate(endDate)}';
@@ -15,7 +15,7 @@ class ScheduleService {
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       print("Raw JSON: $data"); // Debug JSON
-      return data.map((json) => Schedule.fromJson(json)).toList();
+      return data.map((json) => Slot.fromJson(json)).toList();
     } else {
       throw Exception('Failed to load schedules: ${response.statusCode}');
     }

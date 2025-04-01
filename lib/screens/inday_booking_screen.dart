@@ -10,36 +10,36 @@ import 'package:focus_badminton/widgets/payment_result_modal.dart';
 import '../api_services/schedule_service.dart';
 import '../api_services/signalr_service.dart';
 import '../api_services/slot_service.dart';
-import '../models/schedule.dart';
+import '../models/slot.dart';
 import '../widgets/slot_card.dart';
 // import 'package:flutter/foundation.dart'; // Để debugPrint
 import '../models/booking.dart';
 import '../api_services/booking_service.dart';
-import '../utils/deep_link_handler.dart'; // Import DeepLinkHandler
-import 'booking_detail_creen.dart'; // Import BookingDetailScreen
+import '../utils/deep_link_handler.dart';
+import 'booking_detail_creen.dart';
 
-class ScheduleScreen extends StatefulWidget {
+class InDayBookingScreen extends StatefulWidget {
   final int courtId;
   final Voucher? selectedVoucher;
 
-  const ScheduleScreen({
+  const InDayBookingScreen({
     required this.courtId,
     this.selectedVoucher, // Có thể null nếu không chuyển từ VoucherScreen
     Key? key,
   }) : super(key: key);
 
   @override
-  _ScheduleScreenState createState() => _ScheduleScreenState();
+  _InDayBookingScreenState createState() => _InDayBookingScreenState();
 }
 
-class _ScheduleScreenState extends State<ScheduleScreen>
+class _InDayBookingScreenState extends State<InDayBookingScreen>
     with WidgetsBindingObserver {
   late ScheduleService _scheduleService;
   late SignalRService _signalRService;
   late SlotService _slotService;
   late BookingService _bookingService;
   late VoucherService _voucherService;
-  List<Schedule> schedules = [];
+  List<Slot> schedules = [];
   List<Duration> timeSlots = [];
   bool isLoading = true;
   DateTime startDate = DateTime.now();
@@ -230,7 +230,7 @@ class _ScheduleScreenState extends State<ScheduleScreen>
     setState(() => isLoading = false);
   }
 
-  void _updateSlot(Schedule updatedSlot) {
+  void _updateSlot(Slot updatedSlot) {
     setState(() {
       final index = schedules.indexWhere(
         (s) =>
@@ -326,7 +326,7 @@ class _ScheduleScreenState extends State<ScheduleScreen>
               _isSameDay(s.scheduleDate, scheduleDate),
         );
         if (index != -1) {
-          schedules[index] = Schedule(
+          schedules[index] = Slot(
             scheduleDate: schedules[index].scheduleDate,
             dayOfWeek: schedules[index].dayOfWeek,
             courtId: schedules[index].courtId,
@@ -417,7 +417,7 @@ class _ScheduleScreenState extends State<ScheduleScreen>
               _isSameDay(s.scheduleDate, scheduleDate),
         );
         if (index != -1) {
-          schedules[index] = Schedule(
+          schedules[index] = Slot(
             scheduleDate: schedules[index].scheduleDate,
             dayOfWeek: schedules[index].dayOfWeek,
             courtId: schedules[index].courtId,
@@ -567,7 +567,7 @@ class _ScheduleScreenState extends State<ScheduleScreen>
                 _isSameDay(s.scheduleDate, scheduleDate),
           );
           if (index != -1) {
-            schedules[index] = Schedule(
+            schedules[index] = Slot(
               scheduleDate: schedules[index].scheduleDate,
               dayOfWeek: schedules[index].dayOfWeek,
               courtId: schedules[index].courtId,
@@ -584,7 +584,7 @@ class _ScheduleScreenState extends State<ScheduleScreen>
             debugPrint(
                 'Slot updated: ${schedules[index].startTime} on ${schedules[index].scheduleDate}, Status: $scheduleStatus');
           } else {
-            schedules.add(Schedule(
+            schedules.add(Slot(
               scheduleDate: scheduleDate,
               dayOfWeek: _getEnglishDayOfWeek(scheduleDate),
               courtId: widget.courtId,
@@ -1144,7 +1144,7 @@ class _ScheduleScreenState extends State<ScheduleScreen>
                                 (s) =>
                                     _isSameDay(s.scheduleDate, date) &&
                                     s.startTime == time,
-                                orElse: () => Schedule(
+                                orElse: () => Slot(
                                     scheduleDate: date,
                                     courtId: widget.courtId,
                                     courtName: "Sân 1",
@@ -1241,7 +1241,7 @@ class _ScheduleScreenState extends State<ScheduleScreen>
                                 (s) =>
                                     _isSameDay(s.scheduleDate, date) &&
                                     s.startTime == time,
-                                orElse: () => Schedule(
+                                orElse: () => Slot(
                                     scheduleDate: date,
                                     courtId: widget.courtId,
                                     courtName: "Sân 1",

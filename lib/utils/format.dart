@@ -9,4 +9,23 @@ class Format {
     );
     return formatter.format(amount);
   }
+
+  static String formatDateTime(DateTime date) {
+    try {
+      String formattedDate = DateFormat('dd/MM/yyyy').format(date);
+      return formattedDate;
+    } catch (e) {
+      return '01-01-0001';
+    }
+  }
+
+  static String formatDateString(String dateString) {
+    try {
+      DateTime date = DateTime.parse(dateString);
+      String formattedDate = DateFormat('dd/MM/yyyy').format(date);
+      return formattedDate;
+    } catch (e) {
+      return '01-01-0001';
+    }
+  }
 }

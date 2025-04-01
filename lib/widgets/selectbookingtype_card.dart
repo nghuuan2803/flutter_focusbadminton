@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:focus_badminton/screens/fixed_booking_screen.dart';
-import 'package:focus_badminton/screens/schedule_screen.dart';
+import 'package:focus_badminton/screens/inday_booking_screen.dart';
 
 class BookingTypeCard extends StatelessWidget {
   final int type;
@@ -17,7 +17,7 @@ class BookingTypeCard extends StatelessWidget {
             context,
             MaterialPageRoute(
                 builder: (context) => type == 1
-                    ? ScheduleScreen(courtId: 1)
+                    ? InDayBookingScreen(courtId: 1)
                     : FixedBookingScreen(courtId: 1)),
           );
         },

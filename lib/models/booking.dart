@@ -1,5 +1,4 @@
-import 'package:focus_badminton/models/voucher.dart';
-
+import '../models/voucher.dart';
 import '../api_services/payment_service.dart';
 
 class BookingDTO {

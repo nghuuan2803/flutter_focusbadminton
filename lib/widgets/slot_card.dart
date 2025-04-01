@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import '../api_services/slot_service.dart';
-import '../models/schedule.dart';
+import '../models/slot.dart';
 import '../utils/constants.dart';
 
 class SlotCard extends StatefulWidget {
-  final Schedule schedule;
-  final Function(Schedule) onSlotUpdate;
+  final Slot schedule;
+  final Function(Slot) onSlotUpdate;
 
   const SlotCard({required this.schedule, required this.onSlotUpdate, Key? key})
       : super(key: key);
@@ -81,7 +81,7 @@ class _SlotCardState extends State<SlotCard> {
               bookingType: 1,
               dayOfWeek: widget.schedule.dayOfWeek);
           if (holdId > 0) {
-            widget.onSlotUpdate(Schedule(
+            widget.onSlotUpdate(Slot(
               scheduleDate: widget.schedule.scheduleDate,
               dayOfWeek: widget.schedule.dayOfWeek,
               courtId: widget.schedule.courtId,
@@ -107,7 +107,7 @@ class _SlotCardState extends State<SlotCard> {
             final success =
                 await _slotService.releaseSlot(widget.schedule.holdId!);
             if (success) {
-              widget.onSlotUpdate(Schedule(
+              widget.onSlotUpdate(Slot(
                 scheduleDate: widget.schedule.scheduleDate,
                 dayOfWeek: widget.schedule.dayOfWeek,
                 courtId: widget.schedule.courtId,

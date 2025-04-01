@@ -5,7 +5,9 @@ import '../models/voucher.dart';
 import '../models/product.dart';
 import 'dart:convert';
 import 'package:focus_badminton/screens/fixed_booking_screen.dart';
-import 'package:focus_badminton/screens/schedule_screen.dart';
+import 'package:focus_badminton/screens/inday_booking_screen.dart';
+
+import '../utils/format.dart';
 
 class HomeWidget extends StatelessWidget {
   const HomeWidget({super.key});
@@ -73,7 +75,7 @@ class HomeWidget extends StatelessWidget {
                   ),
                   child: TextField(
                     decoration: InputDecoration(
-                      hintText: 'Tìm sản phẩm',
+                      hintText: 'Tìm kiếm',
                       prefixIcon: Icon(Icons.search, color: textColor),
                       border: InputBorder.none,
                       contentPadding: EdgeInsets.symmetric(vertical: 16),
@@ -162,8 +164,8 @@ class HomeWidget extends StatelessWidget {
                         },
                       ),
                       _buildIconButton(
-                          context, Icons.account_balance_wallet, 'Thanh toán'),
-                      _buildIconButton(context, Icons.gamepad, 'Game'),
+                          context, Icons.account_balance_wallet, 'Dịch vụ'),
+                      _buildIconButton(context, Icons.gamepad, 'Mini game'),
                       _buildIconButton(
                           context, Icons.card_giftcard, 'Quà tặng'),
                       _buildIconButton(context, Icons.more_horiz, 'Xem thêm'),
@@ -202,7 +204,7 @@ class HomeWidget extends StatelessWidget {
                                 return _buildVoucherCard(
                                   context,
                                   voucher.name,
-                                  'HSD: ${voucher.expiry != null ? voucher.expiry!.toString().substring(0, 10) : 'Không xác định'}',
+                                  voucher.expiry!,
                                 );
                               },
                             );
@@ -325,7 +327,7 @@ class HomeWidget extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => ScheduleScreen(courtId: 1),
+                  builder: (context) => InDayBookingScreen(courtId: 1),
                 ),
               );
             },
@@ -464,7 +466,8 @@ class HomeWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildVoucherCard(BuildContext context, String title, String expiry) {
+  Widget _buildVoucherCard(
+      BuildContext context, String title, DateTime expiry) {
     return Container(
       width: double.infinity,
       margin: EdgeInsets.symmetric(vertical: 8),
@@ -504,9 +507,9 @@ class HomeWidget extends StatelessWidget {
                 ),
                 SizedBox(height: 8),
                 Text(
-                  expiry,
+                  Format.formatDateTime(expiry),
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 10,
                     color: Colors.grey,
                   ),
                 ),

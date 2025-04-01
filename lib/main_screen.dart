@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:focus_badminton/screens/home_screen.dart';
-import 'package:focus_badminton/screens/booking.dart';
+import 'package:focus_badminton/screens/booking_screen.dart';
 import 'package:focus_badminton/screens/profile_screen.dart';
 import 'package:focus_badminton/screens/vouchers_screen.dart';
 

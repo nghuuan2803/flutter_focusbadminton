@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:focus_badminton/screens/booking_detail_creen.dart';
 import '../models/booking.dart';
 import '../api_services/booking_service.dart';
+import 'booking_detail_screen.dart';
 
 class BookingHistoryScreen extends StatefulWidget {
   final int memberId;

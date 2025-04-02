@@ -11,9 +11,9 @@ import '../api_services/schedule_service.dart';
 import '../api_services/signalr_service.dart'; // Import SignalR Service
 import '../utils/constants.dart';
 import 'package:app_links/app_links.dart';
-import 'booking_detail_creen.dart';
 import '../utils/deep_link_handler.dart';
 import '../widgets/payment_result_modal.dart';
+import 'booking_detail_screen.dart';
 
 class FixedBookingScreen extends StatefulWidget {
   final int courtId;

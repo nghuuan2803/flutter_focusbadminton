@@ -28,13 +28,26 @@ class PaymentService {
           "Processing - BookingId: $bookingId, Method: ${method.name}, PaymentLink: $paymentLink");
       switch (method) {
         case PaymentMethod.momo:
-        case PaymentMethod.vnPay:
-          if (paymentLink != null &&
-              await canLaunchUrl(Uri.parse(paymentLink))) {
-            debugPrint("Launching URL: $paymentLink");
-            await launchUrl(Uri.parse(paymentLink));
+          if (paymentLink != null) {
+            final Uri uri = Uri.parse(paymentLink);
+            debugPrint("Launching Momo deep link: $uri");
+            await launchUrl(uri); // Giữ nguyên để mở app Momo
+            debugPrint("Momo launched successfully");
           } else {
-            throw Exception('Unable to launch URL: $paymentLink');
+            throw Exception('Payment link is null');
+          }
+          break;
+        case PaymentMethod.vnPay:
+          if (paymentLink != null) {
+            final Uri uri = Uri.parse(paymentLink);
+            debugPrint("Launching VnPay URL: $uri");
+            await launchUrl(
+              uri,
+              mode: LaunchMode.externalApplication, // Ép mở trong trình duyệt
+            );
+            debugPrint("VnPay URL launched successfully");
+          } else {
+            throw Exception('Payment link is null');
           }
           break;
         case PaymentMethod.cash:
@@ -46,26 +59,5 @@ class PaymentService {
       debugPrint('Error processing payment: $e');
       rethrow;
     }
-  }
-
-// Hàm giả lập để lấy paymentUrl (thay bằng API thật của backend nếu có)
-  Future<String?> _fetchPaymentUrl(int bookingId, PaymentMethod method) async {
-    // Ví dụ: Gọi API backend để lấy URL thanh toán
-    // final response = await http.get(Uri.parse('${Constants.baseUrl}api/payments/$bookingId?urlType=${method.name}'));
-    // return jsonDecode(response.body)['paymentUrl'];
-    return method == PaymentMethod.momo
-        ? "momo://pay?..."
-        : "vnpay://pay?..."; // Fake URL cho test
-  }
-
-  // Polling để kiểm tra trạng thái thanh toán (nếu cần cho Flutter)
-  Future<bool> checkPaymentStatus(int bookingId) async {
-    final response = await http
-        .get(Uri.parse('${Constants.baseUrl}api/bookings/$bookingId'));
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return data['data']['status'] == 2; // Approved
-    }
-    return false;
   }
 }

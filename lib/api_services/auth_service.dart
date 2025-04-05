@@ -158,6 +158,14 @@ class AuthService {
     return null;
   }
 
+  static Future<String?> getMemberId() async {
+    final userInfo = await getUserInfo();
+    if (userInfo != null && userInfo['memberId'] != null) {
+      return userInfo['memberId'].toString();
+    }
+    return null; // Trả về null nếu không tìm thấy memberId
+  }
+
   Future<bool> LogOut() async {
     try {
       await GoogleSignInService.logout();

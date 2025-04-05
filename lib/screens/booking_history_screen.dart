@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:focus_badminton/main_screen.dart';
 import 'package:intl/intl.dart';
 import '../models/booking.dart';
 import '../api_services/booking_service.dart';
 import 'booking_detail_screen.dart';
 
 class BookingHistoryScreen extends StatefulWidget {
-  final int memberId;
-
-  const BookingHistoryScreen({required this.memberId, Key? key})
-      : super(key: key);
+  const BookingHistoryScreen({Key? key}) : super(key: key);
 
   @override
   State<BookingHistoryScreen> createState() => _BookingHistoryScreenState();
@@ -24,54 +22,74 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
   @override
   void initState() {
     super.initState();
-    _bookingHistoryFuture = _bookingService.getBookingHistory(widget.memberId);
+    _bookingHistoryFuture = _bookingService.getBookingHistory();
   }
 
   void _refreshHistory() {
     setState(() {
-      _bookingHistoryFuture =
-          _bookingService.getBookingHistory(widget.memberId);
+      _bookingHistoryFuture = _bookingService.getBookingHistory();
     });
+  }
+
+  void _handlePop() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const MainScreen(),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Lịch sử đặt sân'),
-        backgroundColor: Colors.blue[800],
-        elevation: 0,
-      ),
-      body: Column(
-        children: [
-          _buildHeader(),
-          Expanded(
-            child: FutureBuilder<List<BookingDTO>>(
-              future: _bookingHistoryFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (snapshot.hasError) {
-                  return _buildErrorState(snapshot.error);
-                }
-                if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return _buildEmptyState();
-                }
-
-                final bookings = snapshot.data!;
-                return ListView.builder(
-                  padding: const EdgeInsets.all(16.0),
-                  itemCount: bookings.length,
-                  itemBuilder: (context, index) {
-                    final booking = bookings[index];
-                    return _buildBookingItem(booking);
-                  },
-                );
-              },
-            ),
+    return PopScope(
+      canPop: false, // Ngăn pop mặc định
+      onPopInvoked: (didPop) {
+        if (!didPop) {
+          _handlePop(); // Gọi logic điều hướng khi bấm back
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Lịch sử đặt sân'),
+          backgroundColor: Colors.blue[800],
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: _handlePop, // Gọi hàm xử lý back khi bấm nút trên AppBar
           ),
-        ],
+        ),
+        body: Column(
+          children: [
+            _buildHeader(),
+            Expanded(
+              child: FutureBuilder<List<BookingDTO>>(
+                future: _bookingHistoryFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (snapshot.hasError) {
+                    return _buildErrorState(snapshot.error);
+                  }
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return _buildEmptyState();
+                  }
+
+                  final bookings = snapshot.data!;
+                  return ListView.builder(
+                    padding: const EdgeInsets.all(16.0),
+                    itemCount: bookings.length,
+                    itemBuilder: (context, index) {
+                      final booking = bookings[index];
+                      return _buildBookingItem(booking);
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -381,7 +381,7 @@ class VouchersScreen extends StatelessWidget {
             SliverPadding(
               padding: EdgeInsets.all(screenWidth * 0.04),
               sliver: FutureBuilder<List<Voucher>>(
-                future: voucherService.getVouchers(1),
+                future: voucherService.getVouchers(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return SliverToBoxAdapter(

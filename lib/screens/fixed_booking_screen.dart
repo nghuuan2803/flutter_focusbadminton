@@ -1,17 +1,22 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:focus_badminton/api_services/payment_service.dart';
+import 'package:focus_badminton/screens/inday_booking_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
+import '../api_services/vouchers_service.dart';
+import '../main_screen.dart';
 import '../models/booking.dart';
 import '../api_services/slot_service.dart';
 import '../api_services/booking_service.dart';
 import '../api_services/schedule_service.dart';
 import '../api_services/signalr_service.dart'; // Import SignalR Service
+import '../models/voucher.dart';
 import '../utils/constants.dart';
 import 'package:app_links/app_links.dart';
 import '../utils/deep_link_handler.dart';
+import '../utils/format.dart';
 import '../widgets/payment_result_modal.dart';
 import 'booking_detail_screen.dart';
 
@@ -46,12 +51,14 @@ class _FixedBookingScreenState extends State<FixedBookingScreen>
   final BookingService _bookingService = BookingService();
   final ScheduleService _scheduleService = ScheduleService();
   late SignalRService _signalRService; // Khai báo SignalR Service
+  final VoucherService _voucherService = VoucherService(); // K
 
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-
+  List<Voucher> availableVouchers = []; // Danh sách voucher
+  Voucher? selectedVoucher; // Voucher được
   final List<String> _daysOfWeek = [
     'Monday',
     'Tuesday',
@@ -82,6 +89,7 @@ class _FixedBookingScreenState extends State<FixedBookingScreen>
   Future<void> _fetchInitialData() async {
     await _fetchTimeSlots();
     await _fetchSlotAvailability(); // Chỉ gọi 1 lần ban đầu
+    availableVouchers = await _voucherService.getVouchers(); // Load voucher
   }
 
   void _setupSignalRListeners() {
@@ -225,14 +233,62 @@ class _FixedBookingScreenState extends State<FixedBookingScreen>
     }
   }
 
+  Future<void> _handlePayment() async {
+    if (_currentBooking == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Không có booking để xử lý')),
+      );
+      return;
+    }
+
+    try {
+      print("Create booking request: ${jsonEncode(_currentBooking!.toJson())}");
+
+      final dynamicBooking =
+          await _bookingService.createBooking(_currentBooking!);
+      final bookingData = jsonDecode(dynamicBooking) as Map<String, dynamic>;
+      final bookingId = bookingData['id'] as int;
+      final paymentLink = bookingData['paymentLink'] as String?;
+
+      await _paymentService.processPayment(
+        bookingId: bookingId,
+        amount: _currentBooking!.amount,
+        deposit: _currentBooking!.deposit,
+        method: _currentBooking!.paymentMethod,
+        paymentLink: paymentLink,
+      );
+
+      Navigator.pop(context); // Đóng bottom sheet
+
+      if (!mounted) return;
+
+      if (_currentBooking!.paymentMethod == PaymentMethod.cash) {
+        _showPaymentResultModal(true, bookingId);
+      } else {
+        print(
+            "Waiting for deep link callback for payment method: ${_currentBooking!.paymentMethod}");
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Lỗi khi đặt sân: $e')),
+      );
+    }
+  }
+
   void _handlePaymentCallback(Uri uri) {
-    final bookingId = uri.queryParameters['bookingId'] as int;
+    final bookingIdStr = uri.queryParameters['bookingId'];
     final resultCode = uri.queryParameters['resultCode'];
-    if (bookingId != null && resultCode != null) {
-      final isSuccess = resultCode == "0";
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _showPaymentResultModal(isSuccess, bookingId);
-      });
+    if (bookingIdStr != null && resultCode != null) {
+      final bookingId = int.tryParse(bookingIdStr);
+      if (bookingId != null) {
+        final isSuccess = resultCode == "0";
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _showPaymentResultModal(isSuccess, bookingId);
+        });
+      } else {
+        print("Error: Invalid bookingId from deep link: $bookingIdStr");
+      }
     }
   }
 
@@ -240,21 +296,18 @@ class _FixedBookingScreenState extends State<FixedBookingScreen>
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext dialogContext) => WillPopScope(
-        onWillPop: () async => false,
-        child: PaymentResultModal(
-          isSuccess: isSuccess,
-          bookingId: bookingId,
-          onDismiss: () {
-            Navigator.of(dialogContext).pop();
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => BookingDetailScreen(bookingId: bookingId),
-              ),
+      builder: (dialogContext) => PopScope(
+        canPop: false, // Ngăn back mặc định
+        onPopInvoked: (didPop) {
+          if (!didPop) {
+            Navigator.of(dialogContext).pop(); // Đóng modal khi bấm back
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const MainScreen()),
             );
-            _resetSelections();
-          },
-        ),
+          }
+        },
+        child: PaymentResultModal(isSuccess: isSuccess, bookingId: bookingId),
       ),
     );
   }
@@ -525,28 +578,31 @@ class _FixedBookingScreenState extends State<FixedBookingScreen>
     if (_selectedTimeSlotIds.isEmpty ||
         _startDate == null ||
         _selectedDays.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Vui lòng chọn đầy đủ thông tin và khung giờ')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Vui lòng chọn đầy đủ thông tin và khung giờ')),
+      );
       return;
     }
     if (_isFixedWithEndDate && _endDate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Vui lòng chọn ngày kết thúc cho đặt sân cố định')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Vui lòng chọn ngày kết thúc cho đặt sân cố định')),
+      );
       return;
     }
 
     List<BookingItem> details = [];
     double totalAmount = 0.0;
 
-    // Dùng Set để loại bỏ trùng lặp trong _selectedTimeSlotIds
     final uniqueTimeSlotIds = _selectedTimeSlotIds.toSet();
-
     for (var timeSlotId in uniqueTimeSlotIds) {
       final slot = _allTimeSlots.firstWhere((s) => s.id == timeSlotId);
-      final holdIds = _holdIds[timeSlotId]; // Kiểm tra slot đã được giữ
+      final holdIds = _holdIds[timeSlotId];
       if (holdIds == null || holdIds.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Slot chưa được giữ, vui lòng thử lại')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Slot chưa được giữ, vui lòng thử lại')),
+        );
         return;
       }
 
@@ -571,7 +627,6 @@ class _FixedBookingScreenState extends State<FixedBookingScreen>
             )
           : null;
 
-      // Tạo một BookingItem cho mỗi dayOfWeek trong _selectedDays
       for (var dayOfWeek in _selectedDays) {
         int dayCount = 0;
         final end = _endDate ?? _startDate!;
@@ -591,22 +646,28 @@ class _FixedBookingScreenState extends State<FixedBookingScreen>
           timeSlotId: timeSlotId,
           beginAt: adjustedBeginAt.toUtc(),
           endAt: endAtLocal?.toUtc(),
-          dayOfWeek: dayOfWeek, // Một ngày duy nhất cho mỗi BookingDetail
+          dayOfWeek: dayOfWeek,
           price: slot.price,
           amount: amount,
         ));
       }
     }
 
+    // Gom nhóm các BookingItem theo timeSlotId
+    Map<int, List<BookingItem>> groupedDetails = {};
+    for (var detail in details) {
+      groupedDetails.putIfAbsent(detail.timeSlotId, () => []).add(detail);
+    }
+
     setState(() {
       _currentBooking = BookingDTO(
         memberId: 1,
-        teamId: 1,
         type: _isFixedWithEndDate ? 2 : 3,
         approvedAt: null,
         completedAt: null,
         amount: totalAmount,
-        deposit: details.length * 10000,
+        deposit:
+            uniqueTimeSlotIds.length * 10000, // Tính deposit theo số khung giờ
         voucherId: null,
         discount: 0,
         paymentMethod: PaymentMethod.cash,
@@ -618,115 +679,228 @@ class _FixedBookingScreenState extends State<FixedBookingScreen>
 
     _scaffoldKey.currentState!.showBottomSheet(
       (context) => DraggableScrollableSheet(
-        initialChildSize: 0.4,
+        initialChildSize: 0.2,
         minChildSize: 0.2,
         maxChildSize: 0.8,
         expand: false,
-        builder: (BuildContext context, ScrollController scrollController) {
-          return StatefulBuilder(
-            builder: (BuildContext context, StateSetter setBottomSheetState) {
-              String selectedPaymentMethod =
-                  _currentBooking!.paymentMethod.name;
+        builder: (_, scrollController) => StatefulBuilder(
+          builder: (_, setBottomSheetState) {
+            String selectedPaymentMethod = _currentBooking!.paymentMethod.name;
 
-              return Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                  boxShadow: [
-                    BoxShadow(
+            return Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                boxShadow: [
+                  BoxShadow(
                       color: Colors.black12,
                       blurRadius: 10,
-                      offset: Offset(0, -2),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 4,
-                      margin: const EdgeInsets.symmetric(vertical: 8),
-                      decoration: BoxDecoration(
+                      offset: Offset(0, -2))
+                ],
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
                         color: Colors.grey[400],
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        controller: scrollController,
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Xác nhận đặt sân',
-                                style: TextStyle(
-                                    fontSize: 20, fontWeight: FontWeight.bold)),
-                            const SizedBox(height: 12),
-                            Text('Sân: ${widget.courtId}'),
-                            Text(
-                                'Bắt đầu: ${DateFormat('dd/MM/yyyy').format(_startDate!)}'),
-                            Text(
-                                'Kết thúc: ${_isFixedWithEndDate && _endDate != null ? DateFormat('dd/MM/yyyy').format(_endDate!) : 'Không xác định'}'),
-                            Text(
-                                'Các ngày: ${_selectedDays.map(_getVnDay).join(', ')}'),
-                            const SizedBox(height: 8),
-                            const Text('Khung giờ:',
-                                style: TextStyle(fontWeight: FontWeight.w600)),
-                            ..._selectedTimeSlotIds.map((id) {
-                              final slot =
-                                  _allTimeSlots.firstWhere((s) => s.id == id);
-                              return Text(
-                                  '${slot.startTimeString} - ${slot.endTimeString}');
-                            }),
-                            const SizedBox(height: 12),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text('Tổng tiền:',
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.w600)),
-                                Text('${_currentBooking!.amount} VNĐ',
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.green)),
-                              ],
+                        borderRadius: BorderRadius.circular(2)),
+                  ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      controller: scrollController,
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Lịch đã chọn',
+                              style: TextStyle(
+                                  fontSize: 20, fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 12),
+                          if (_currentBooking!.details!.isEmpty)
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 8),
+                              child: Text('Chưa chọn lịch',
+                                  style: TextStyle(color: Colors.grey)),
+                            )
+                          else
+                            Column(
+                              children: groupedDetails.entries.map((entry) {
+                                final slot = _allTimeSlots
+                                    .firstWhere((s) => s.id == entry.key);
+                                final daysOfWeek = entry.value
+                                    .map((d) => d.dayOfWeek!)
+                                    .toSet()
+                                    .toList();
+                                return Card(
+                                  elevation: 2,
+                                  margin:
+                                      const EdgeInsets.symmetric(vertical: 4),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Sân ${widget.courtId} [${slot.startTimeString} - ${slot.endTimeString}]',
+                                          style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                        // const SizedBox(height: 4),
+                                        // Text(
+                                        //   'Giá mỗi ngày: ${Format.formatVNCurrency(slot.price)}',
+                                        //   style: const TextStyle(fontSize: 14),
+                                        // ),
+                                        const SizedBox(height: 8),
+                                        Wrap(
+                                          spacing: 6.0,
+                                          runSpacing: 4.0,
+                                          children: daysOfWeek
+                                              .map((day) => Chip(
+                                                    label: Text(
+                                                      _getVnDay(day),
+                                                      style: const TextStyle(
+                                                          fontSize: 12),
+                                                    ),
+                                                    backgroundColor:
+                                                        Colors.blue[100],
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                        horizontal: 6),
+                                                  ))
+                                              .toList(),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
                             ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text('Đặt cọc:',
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.w600)),
-                                Text('${_currentBooking!.deposit} VNĐ',
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.green)),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            const Text('Phương thức thanh toán:',
-                                style: TextStyle(fontWeight: FontWeight.w600)),
-                            const SizedBox(height: 8),
-                            DropdownButtonFormField<String>(
-                              value: selectedPaymentMethod,
-                              decoration: const InputDecoration(
-                                border: OutlineInputBorder(),
-                                contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 8),
+                          const SizedBox(height: 12),
+                          const Divider(),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text('Tổng tiền gốc:',
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600)),
+                              Text(
+                                Format.formatVNCurrency(
+                                    _currentBooking!.amount),
+                                style: const TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold),
                               ),
-                              items: PaymentMethod.values
-                                  .map((method) => DropdownMenuItem<String>(
-                                        value: method.name,
-                                        child: Text(method.name),
-                                      ))
-                                  .toList(),
-                              onChanged: (value) {
-                                if (value != null && _currentBooking != null) {
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          const Text('Chọn Voucher:',
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 8),
+                          DropdownButtonFormField<Voucher>(
+                            value: selectedVoucher,
+                            decoration: const InputDecoration(
+                              border: OutlineInputBorder(),
+                              contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 8),
+                            ),
+                            items: [
+                              const DropdownMenuItem<Voucher>(
+                                  value: null,
+                                  child: Text('Không sử dụng voucher')),
+                              ...availableVouchers
+                                  .map((voucher) => DropdownMenuItem<Voucher>(
+                                        value: voucher,
+                                        child: Text(voucher.name),
+                                      )),
+                            ],
+                            onChanged: (value) {
+                              setBottomSheetState(() {
+                                selectedVoucher = value;
+                                if (_currentBooking != null) {
+                                  _currentBooking = BookingDTO(
+                                    memberId: _currentBooking!.memberId,
+                                    type: _currentBooking!.type,
+                                    approvedAt: _currentBooking!.approvedAt,
+                                    completedAt: _currentBooking!.completedAt,
+                                    amount: _currentBooking!.amount,
+                                    deposit: _currentBooking!.deposit,
+                                    voucherId: value?.id,
+                                    discount: _calculateDiscount(),
+                                    paymentMethod:
+                                        _currentBooking!.paymentMethod,
+                                    note: _currentBooking!.note,
+                                    adminNote: _currentBooking!.adminNote,
+                                    details: _currentBooking!.details,
+                                  );
+                                }
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 8),
+                          if (selectedVoucher != null) ...[
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text('Giảm giá:',
+                                    style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600)),
+                                Text(
+                                  '-${Format.formatVNCurrency(_calculateDiscount())}',
+                                  style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.red),
+                                ),
+                              ],
+                            ),
+                          ],
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text('Tổng tiền sau giảm:',
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600)),
+                              Text(
+                                Format.formatVNCurrency(
+                                    _currentBooking!.amount -
+                                        _calculateDiscount()),
+                                style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.green),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          const Text('Phương thức thanh toán:',
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 8),
+                          GridView.count(
+                            crossAxisCount: 2,
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            childAspectRatio: 3,
+                            mainAxisSpacing: 8,
+                            crossAxisSpacing: 8,
+                            children: PaymentMethod.values.map((method) {
+                              final isSelected =
+                                  selectedPaymentMethod == method.name;
+                              return GestureDetector(
+                                onTap: () {
                                   setBottomSheetState(() {
-                                    selectedPaymentMethod = value;
+                                    selectedPaymentMethod = method.name;
                                     _currentBooking = BookingDTO(
                                       memberId: _currentBooking!.memberId,
-                                      teamId: _currentBooking!.teamId,
                                       type: _currentBooking!.type,
                                       approvedAt: _currentBooking!.approvedAt,
                                       completedAt: _currentBooking!.completedAt,
@@ -734,115 +908,107 @@ class _FixedBookingScreenState extends State<FixedBookingScreen>
                                       deposit: _currentBooking!.deposit,
                                       voucherId: _currentBooking!.voucherId,
                                       discount: _currentBooking!.discount,
-                                      paymentMethod: PaymentMethod.values
-                                          .firstWhere((m) => m.name == value),
+                                      paymentMethod: method,
                                       note: _currentBooking!.note,
                                       adminNote: _currentBooking!.adminNote,
                                       details: _currentBooking!.details,
                                     );
                                   });
-                                }
-                              },
-                            ),
-                            const SizedBox(height: 20),
-                            SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton(
-                                onPressed: () async {
-                                  try {
-                                    // Log request để kiểm tra
-                                    print(
-                                        "Create booking request: ${jsonEncode(_currentBooking!.toJson())}");
-
-                                    final dynamicBooking = await _bookingService
-                                        .createBooking(_currentBooking!);
-                                    final bookingData =
-                                        jsonDecode(dynamicBooking)
-                                            as Map<String, dynamic>;
-                                    final bookingId = bookingData['id'] as int;
-                                    await _paymentService.processPayment(
-                                      bookingId: bookingId,
-                                      amount: _currentBooking!.amount,
-                                      deposit: _currentBooking!.deposit,
-                                      method: _currentBooking!.paymentMethod,
-                                      paymentLink: bookingData['paymentLink'],
-                                    );
-                                    Navigator.pop(context); // Đóng bottom sheet
-                                    if (!mounted) return;
-                                    if (_currentBooking!.paymentMethod !=
-                                        PaymentMethod.momo) {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(
-                                            content: Text(
-                                                'Đặt sân thành công! ID: $bookingId')),
-                                      );
-                                      Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              BookingDetailScreen(
-                                                  bookingId: bookingId),
+                                },
+                                child: Card(
+                                  elevation: isSelected ? 4 : 2,
+                                  color: isSelected
+                                      ? Colors.blue[50]
+                                      : Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                    side: BorderSide(
+                                      color: isSelected
+                                          ? Colors.blue
+                                          : Colors.grey,
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        _getPaymentIcon(method,
+                                            isSelected: isSelected),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          method.name.capitalize(),
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: isSelected
+                                                ? FontWeight.bold
+                                                : FontWeight.normal,
+                                            color: isSelected
+                                                ? Colors.blue
+                                                : Colors.black,
+                                          ),
                                         ),
-                                      );
-                                      _resetSelections();
-                                    }
-                                  } catch (e) {
-                                    if (!mounted) return;
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                          content: Text('Lỗi khi đặt sân: $e')),
-                                    );
-                                  }
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  foregroundColor: Colors.white,
-                                  backgroundColor: Colors.green,
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 16),
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10)),
+                                      ],
+                                    ),
+                                  ),
                                 ),
-                                child: const Text('Xác nhận',
-                                    style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold)),
+                              );
+                            }).toList(),
+                          ),
+                          const SizedBox(height: 20),
+                          SizedBox(
+                            height: 45,
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: _currentBooking!.details!.isEmpty
+                                  ? null
+                                  : _handlePayment,
+                              style: ElevatedButton.styleFrom(
+                                foregroundColor: Colors.white,
+                                backgroundColor: Colors.green,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8)),
+                                disabledBackgroundColor: Colors.grey,
                               ),
+                              child: const Text('Thanh toán',
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold)),
                             ),
-                            const SizedBox(height: 10),
-                            SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton(
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                  _releaseHeldSlots();
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  foregroundColor: Colors.white,
-                                  backgroundColor: Colors.grey,
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 16),
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10)),
-                                ),
-                                child: const Text('Hủy',
-                                    style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold)),
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
-              );
-            },
-          );
-        },
+                  )
+                ],
+              ),
+            );
+          },
+        ),
       ),
       backgroundColor: Colors.transparent,
     );
+  }
+
+  double _calculateDiscount() {
+    if (selectedVoucher == null || _currentBooking == null) return 0.0;
+
+    final voucher = selectedVoucher!;
+    final total = _currentBooking!.amount;
+
+    if (voucher.discountType == 0) {
+      // Giảm cố định
+      return voucher.value;
+    } else {
+      // Giảm phần trăm
+      double discount = (total * voucher.value) / 100;
+      if (voucher.maximumValue > 0 && discount > voucher.maximumValue) {
+        discount = voucher.maximumValue;
+      }
+      return discount;
+    }
   }
 
   String _getVnDay(String day) {
@@ -863,6 +1029,20 @@ class _FixedBookingScreenState extends State<FixedBookingScreen>
         return "Chủ nhật";
       default:
         return "Invalid";
+    }
+  }
+
+  Widget _getPaymentIcon(PaymentMethod method, {bool isSelected = false}) {
+    final color = isSelected ? Colors.blue : Colors.grey;
+    switch (method) {
+      case PaymentMethod.cash:
+        return Icon(Icons.money, color: color, size: 24);
+      case PaymentMethod.vnPay:
+        return Image.asset('assets/images/vnpay.png', width: 24, height: 24);
+      case PaymentMethod.momo:
+        return Image.asset('assets/images/momo.png', width: 24, height: 24);
+      default:
+        return Icon(Icons.payment, color: color, size: 24);
     }
   }
 

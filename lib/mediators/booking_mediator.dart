@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../api_services/auth_service.dart';
 import '../api_services/booking_service.dart';
 import '../api_services/payment_service.dart';
 import '../api_services/schedule_service.dart';
@@ -35,7 +36,7 @@ class ConcreteBookingMediator implements BookingMediator {
   List<BookingItem> _selectedSlots = [];
   BookingDTO? _currentBooking;
   final double _pricePerSlot = 100000; // Giả lập giá
-  final String _userId = "1"; // Giả lập userId
+  late String? _memberId; // Giả lập userId
 
   ConcreteBookingMediator({
     required ScheduleService scheduleService,
@@ -52,7 +53,16 @@ class ConcreteBookingMediator implements BookingMediator {
         _voucherService = voucherService,
         _signalRService = signalRService,
         _courtId = courtId {
+    _initializeUserId(); // Khởi tạo userId
     _setupSignalR();
+  }
+
+  Future<void> _initializeUserId() async {
+    _memberId = await AuthService.getMemberId();
+    if (_memberId == null) {
+      print(
+          "⚠ Warning: Could not retrieve memberId. User may not be logged in.");
+    }
   }
 
   @override
@@ -79,7 +89,7 @@ class ConcreteBookingMediator implements BookingMediator {
   Future<void> holdSlot(Slot slot) async {
     try {
       print("Mediator: Holding slot - TimeSlotId: ${slot.timeSlotId}");
-      final holdId = await _slotService.holdSlot(
+      final result = await _slotService.holdSlot(
         courtId: slot.courtId,
         timeSlotId: slot.timeSlotId,
         beginAt: slot.scheduleDate.add(slot.startTime),
@@ -87,9 +97,12 @@ class ConcreteBookingMediator implements BookingMediator {
         bookingType: 1,
         dayOfWeek: slot.dayOfWeek,
       );
+      final holdId = result['holdId'] as int;
+      final estimatedCost = result['estimatedCost'] as double;
+
       if (holdId > 0) {
         final updatedSlot =
-            slot.copyWith(status: 2, holdId: holdId, heldBy: _userId);
+            slot.copyWith(status: 2, holdId: holdId, heldBy: _memberId);
         _updateSchedule(updatedSlot);
         final bookingItem = BookingItem(
           courtId: slot.courtId,
@@ -98,8 +111,8 @@ class ConcreteBookingMediator implements BookingMediator {
           beginAt: slot.scheduleDate.add(slot.startTime),
           endAt: slot.scheduleDate.add(slot.endTime),
           dayOfWeek: _getEnglishDayOfWeek(slot.scheduleDate),
-          price: _pricePerSlot,
-          amount: _pricePerSlot,
+          price: estimatedCost, // Sử dụng giá từ API
+          amount: estimatedCost, // Sử dụng giá từ API
           holdId: holdId,
         );
         _selectedSlots.add(bookingItem);
@@ -195,7 +208,7 @@ class ConcreteBookingMediator implements BookingMediator {
   @override
   Future<List<Voucher>> loadVouchers(int memberId) async {
     try {
-      availableVouchers = await _voucherService.getVouchers(memberId);
+      availableVouchers = await _voucherService.getVouchers();
       return availableVouchers;
     } catch (e) {
       print("Mediator: Error loading vouchers: $e");
@@ -299,10 +312,13 @@ class ConcreteBookingMediator implements BookingMediator {
 
   void _updateBooking() {
     if (_selectedSlots.isNotEmpty) {
+      // Tính tổng tiền dựa trên estimatedCost của từng slot
+      final totalAmount =
+          _selectedSlots.fold<double>(0, (sum, slot) => sum + slot.amount);
       _currentBooking = BookingDTO(
         memberId: 1,
-        amount: _pricePerSlot * _selectedSlots.length,
-        deposit: _pricePerSlot * _selectedSlots.length * 0.5,
+        amount: totalAmount,
+        deposit: totalAmount * 0.5, // 50% tiền cọc
         details: List.from(_selectedSlots),
         paymentMethod: _currentBooking?.paymentMethod ?? PaymentMethod.cash,
         type: 1,

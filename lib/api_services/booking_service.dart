@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart'; // Để dùng debugPrint
 import '../utils/constants.dart';
 import '../models/booking.dart';
+import 'auth_service.dart';
 
 class BookingService {
   Future<dynamic> createBooking(BookingDTO booking) async {
@@ -92,8 +93,9 @@ class BookingService {
     throw Exception('Fail to load booking info id: $id');
   }
 
-  Future<List<BookingDTO>> getBookingHistory(int memberId) async {
+  Future<List<BookingDTO>> getBookingHistory() async {
     try {
+      final memberId = await AuthService.getMemberId();
       final response = await http.get(
         Uri.parse('${Constants.baseUrl}api/bookings/history/$memberId'),
         headers: {'Content-Type': 'application/json'},

@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'main_screen.dart';
 import 'dart:io';
 
-import 'screens/web_test_screen.dart';
-
 class MyHttpOverrides extends HttpOverrides {
   @override
   HttpClient createHttpClient(SecurityContext? context) {
@@ -25,7 +23,5 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
         debugShowCheckedModeBanner: false, home: MainScreen());
-    // debugShowCheckedModeBanner: false,
-    // home: MyApp());
   }
 }

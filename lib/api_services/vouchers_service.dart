@@ -3,13 +3,14 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../utils/constants.dart';
 import '../models/voucher.dart';
+import 'auth_service.dart';
 
 class VoucherService {
   final String baseUrl = "${Constants.baseUrl}api";
-  final String userId = "1";
 
   // Lấy danh sách voucher
-  Future<List<Voucher>> getVouchers(int memberId) async {
+  Future<List<Voucher>> getVouchers() async {
+    final memberId = await AuthService.getMemberId();
     final url = '$baseUrl/Vouchers/get-by-member/$memberId';
     print('Url called: $url');
 

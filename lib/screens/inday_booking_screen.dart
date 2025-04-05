@@ -7,6 +7,7 @@ import '../api_services/schedule_service.dart';
 import '../api_services/signalr_service.dart';
 import '../api_services/slot_service.dart';
 import '../api_services/vouchers_service.dart';
+import '../main_screen.dart';
 import '../mediators/booking_mediator.dart';
 import '../models/booking.dart';
 import '../models/slot.dart';
@@ -182,19 +183,18 @@ class _InDayBookingScreenState extends State<InDayBookingScreen>
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (dialogContext) => WillPopScope(
-        onWillPop: () async => false,
-        child: PaymentResultModal(
-          isSuccess: isSuccess,
-          bookingId: bookingId,
-          onDismiss: () {
-            Navigator.of(dialogContext).pop();
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                  builder: (_) => BookingDetailScreen(bookingId: bookingId)),
+      builder: (dialogContext) => PopScope(
+        canPop: false, // Ngăn back mặc định
+        onPopInvoked: (didPop) {
+          if (!didPop) {
+            Navigator.of(dialogContext).pop(); // Đóng modal khi bấm back
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const MainScreen()),
             );
-          },
-        ),
+          }
+        },
+        child: PaymentResultModal(isSuccess: isSuccess, bookingId: bookingId),
       ),
     );
   }
@@ -261,7 +261,7 @@ class _InDayBookingScreenState extends State<InDayBookingScreen>
                                           title: Text(
                                               '${slot.courtName} - ${slot.beginAt?.toString().substring(0, 16)}'),
                                           subtitle: Text(
-                                              'Giá: ${Format.formatVNCurrency(slot.price)}'),
+                                              'Giá: ${Format.formatVNCurrency(slot.price)}'), // Hiển thị giá từ API
                                           trailing: IconButton(
                                             icon: const Icon(Icons.delete,
                                                 color: Colors.red),
@@ -343,7 +343,8 @@ class _InDayBookingScreenState extends State<InDayBookingScreen>
                                         fontSize: 16,
                                         fontWeight: FontWeight.w600)),
                                 Text(
-                                  '-${Format.formatVNCurrency(currentBooking?.discount ?? 0)}',
+                                  // Sửa logic hiển thị ở đây
+                                  '-${_getFormattedDiscount()}',
                                   style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
@@ -361,9 +362,7 @@ class _InDayBookingScreenState extends State<InDayBookingScreen>
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600)),
                               Text(
-                                Format.formatVNCurrency(
-                                    (currentBooking?.amount ?? 0) -
-                                        (currentBooking?.discount ?? 0)),
+                                _calculateFinalAmount(), // Sử dụng phương thức mới
                                 style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
@@ -707,6 +706,46 @@ class _InDayBookingScreenState extends State<InDayBookingScreen>
 
   bool _isSameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
+  String _getFormattedDiscount() {
+    if (selectedVoucher == null || currentBooking == null) {
+      return Format.formatVNCurrency(0);
+    }
+
+    final voucher = selectedVoucher!;
+    final total = currentBooking!.amount;
+
+    // Xử lý logic giảm giá
+    if (voucher.discountType == 0) {
+      // Loại cố định
+      return Format.formatVNCurrency(voucher.value);
+    } else {
+      // Loại phần trăm + check maximum
+      double discount = (total * voucher.value) / 100;
+      if (voucher.maximumValue > 0 && discount > voucher.maximumValue) {
+        discount = voucher.maximumValue;
+      }
+      return Format.formatVNCurrency(discount);
+    }
+  }
+
+  String _calculateFinalAmount() {
+    final total = currentBooking?.amount ?? 0;
+    if (selectedVoucher == null) return Format.formatVNCurrency(total);
+
+    double discount = 0;
+    if (selectedVoucher!.discountType == 0) {
+      // Giảm cố định
+      discount = selectedVoucher!.value;
+    } else {
+      // Giảm phần trăm (kiểm tra giá trị tối đa)
+      discount = (total * selectedVoucher!.value) / 100;
+      if (selectedVoucher!.maximumValue > 0 &&
+          discount > selectedVoucher!.maximumValue) {
+        discount = selectedVoucher!.maximumValue;
+      }
+    }
+    return Format.formatVNCurrency(total - discount);
+  }
 
   @override
   void dispose() {

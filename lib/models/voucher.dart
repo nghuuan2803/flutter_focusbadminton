@@ -2,7 +2,7 @@ class Voucher {
   int id;
   String name;
   String? description;
-  String discountType;
+  int discountType;
   double value;
   double maximumValue;
   int? voucherTemplateId;
@@ -30,8 +30,7 @@ class Voucher {
       id: json['id'] is int ? json['id'] : 0, // Đảm bảo id là int
       name: json['name']?.toString() ?? '', // Chuyển đổi và xử lý null
       description: json['description']?.toString(), // Nullable
-      discountType:
-          json['discountType']?.toString() ?? 'Percent', // Mặc định "Percent"
+      discountType: json['discountType'] as int, // Mặc định "Percent"
       value: (json['value'] is num
           ? json['value'].toDouble()
           : 0.0), // Đảm bảo double

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../api_services/booking_service.dart';
 import '../models/booking.dart';
+import 'booking_history_screen.dart';
 
 class BookingDetailScreen extends StatefulWidget {
   final int bookingId;
@@ -26,41 +27,62 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     _bookingFuture = _bookingService.getBookingDetail(widget.bookingId);
   }
 
+  void _handlePop() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BookingHistoryScreen(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Chi tiết đặt sân #${widget.bookingId}'),
-        backgroundColor: Colors.blue[800],
-        elevation: 0,
-      ),
-      body: FutureBuilder<BookingDTO>(
-        future: _bookingFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('Lỗi: ${snapshot.error}'));
-          }
-          if (!snapshot.hasData) {
-            return const Center(
-                child: Text('Không tìm thấy thông tin đặt sân'));
-          }
+    return PopScope(
+      canPop: false, // Ngăn pop mặc định
+      onPopInvoked: (didPop) {
+        if (!didPop) {
+          _handlePop(); // Gọi logic điều hướng khi bấm back
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Chi tiết đặt sân #${widget.bookingId}'),
+          backgroundColor: Colors.blue[800],
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: _handlePop, // Gọi hàm xử lý back khi bấm nút trên AppBar
+          ),
+        ),
+        body: FutureBuilder<BookingDTO>(
+          future: _bookingFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return Center(child: Text('Lỗi: ${snapshot.error}'));
+            }
+            if (!snapshot.hasData) {
+              return const Center(
+                  child: Text('Không tìm thấy thông tin đặt sân'));
+            }
 
-          final booking = snapshot.data!;
-          return SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeader(),
-                _buildBookingInfo(booking),
-                _buildCourtDetails(booking),
-                _buildBackButton(context),
-              ],
-            ),
-          );
-        },
+            final booking = snapshot.data!;
+            return SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeader(),
+                  _buildBookingInfo(booking),
+                  _buildCourtDetails(booking),
+                  _buildBackButton(context),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -397,7 +419,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
       padding: const EdgeInsets.all(16.0),
       child: Center(
         child: ElevatedButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: _handlePop, // Gọi hàm xử lý back khi bấm nút dưới cùng
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.blue[700],
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),

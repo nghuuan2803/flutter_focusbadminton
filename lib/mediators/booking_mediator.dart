@@ -18,7 +18,7 @@ abstract class BookingMediator {
   void setUICallback(
       Function(List<Slot>, List<BookingItem>, BookingDTO?) callback);
   void updateUI();
-  Future<List<Voucher>> loadVouchers(int memberId);
+  Future<List<Voucher>> loadVouchers();
 }
 
 class ConcreteBookingMediator implements BookingMediator {
@@ -103,6 +103,7 @@ class ConcreteBookingMediator implements BookingMediator {
       if (holdId > 0) {
         final updatedSlot =
             slot.copyWith(status: 2, holdId: holdId, heldBy: _memberId);
+        print('mediator - holdslot - new status: ${updatedSlot.status}');
         _updateSchedule(updatedSlot);
         final bookingItem = BookingItem(
           courtId: slot.courtId,
@@ -206,7 +207,7 @@ class ConcreteBookingMediator implements BookingMediator {
   }
 
   @override
-  Future<List<Voucher>> loadVouchers(int memberId) async {
+  Future<List<Voucher>> loadVouchers() async {
     try {
       availableVouchers = await _voucherService.getVouchers();
       return availableVouchers;

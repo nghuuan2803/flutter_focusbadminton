@@ -3,16 +3,16 @@ import '../models/slot.dart';
 import '../utils/constants.dart';
 
 class SlotCard extends StatelessWidget {
+  final String userId;
   final Slot schedule;
   final Function(BuildContext, Slot) onSlotUpdate;
 
   const SlotCard({
+    required this.userId,
     required this.schedule,
     required this.onSlotUpdate,
     Key? key,
   }) : super(key: key);
-
-  static const String userId = "1"; // Giả lập userId
 
   Color _getStatusColor() {
     switch (schedule.status) {

@@ -17,6 +17,7 @@ import '../utils/format.dart';
 import '../widgets/payment_result_modal.dart';
 import '../widgets/slot_card.dart';
 import 'booking_detail_screen.dart';
+import '../utils/colors.dart';
 
 class InDayBookingScreen extends StatefulWidget {
   final int courtId;
@@ -203,9 +204,9 @@ class _InDayBookingScreenState extends State<InDayBookingScreen>
     _bottomSheetController?.close();
     _bottomSheetController = _scaffoldKey.currentState!.showBottomSheet(
       (context) => DraggableScrollableSheet(
-        initialChildSize: 0.2,
-        minChildSize: 0.2,
-        maxChildSize: 0.8,
+        initialChildSize: 1,
+        minChildSize: 1,
+        maxChildSize: 1,
         expand: false,
         builder: (_, scrollController) => StatefulBuilder(
           builder: (_, setBottomSheetState) {
@@ -773,23 +774,23 @@ class _InDayBookingScreenState extends State<InDayBookingScreen>
                   label: Text(
                       "Từ ${startDate.day}/${startDate.month}/${startDate.year}"),
                   style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    backgroundColor: Colors.lightBlue,
+                    foregroundColor: AppColors.textColor,
+                    backgroundColor: const Color.fromARGB(255, 255, 255, 255),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(5)),
+                        borderRadius: BorderRadius.circular(8)),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 16),
                 ElevatedButton.icon(
                   onPressed: () => _selectEndDate(context),
                   icon: const Icon(Icons.calendar_today, size: 18),
                   label: Text(
                       "Đến ${endDate.day}/${endDate.month}/${endDate.year}"),
                   style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    backgroundColor: Colors.lightBlue,
+                    foregroundColor: AppColors.textColor,
+                    backgroundColor: const Color.fromARGB(255, 255, 255, 255),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(5)),
+                        borderRadius: BorderRadius.circular(8)),
                   ),
                 ),
               ],
@@ -801,7 +802,7 @@ class _InDayBookingScreenState extends State<InDayBookingScreen>
                 ElevatedButton.icon(
                   onPressed: _resetDates,
                   icon: const Icon(Icons.refresh, size: 18),
-                  label: const Text("Đặt lại"),
+                  label: const Text('Đặt lại'),
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.white,
                     backgroundColor: Colors.lightBlue,
@@ -809,7 +810,7 @@ class _InDayBookingScreenState extends State<InDayBookingScreen>
                         borderRadius: BorderRadius.circular(5)),
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 70),
                 Row(
                   children: [
                     const Text("Quay bảng", style: TextStyle(fontSize: 16)),

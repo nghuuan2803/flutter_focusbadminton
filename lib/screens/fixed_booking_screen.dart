@@ -11,7 +11,7 @@ import '../models/booking.dart';
 import '../api_services/slot_service.dart';
 import '../api_services/booking_service.dart';
 import '../api_services/schedule_service.dart';
-import '../api_services/signalr_service.dart'; // Import SignalR Service
+import '../api_services/signalr_service.dart';
 import '../models/voucher.dart';
 import '../utils/constants.dart';
 import 'package:app_links/app_links.dart';
@@ -19,6 +19,7 @@ import '../utils/deep_link_handler.dart';
 import '../utils/format.dart';
 import '../widgets/payment_result_modal.dart';
 import 'booking_detail_screen.dart';
+import '../utils/colors.dart';
 
 class FixedBookingScreen extends StatefulWidget {
   final int courtId;
@@ -679,9 +680,9 @@ class _FixedBookingScreenState extends State<FixedBookingScreen>
 
     _scaffoldKey.currentState!.showBottomSheet(
       (context) => DraggableScrollableSheet(
-        initialChildSize: 0.2,
-        minChildSize: 0.2,
-        maxChildSize: 0.8,
+        initialChildSize: 1,
+        minChildSize: 1,
+        maxChildSize: 1,
         expand: false,
         builder: (_, scrollController) => StatefulBuilder(
           builder: (_, setBottomSheetState) {
@@ -967,7 +968,7 @@ class _FixedBookingScreenState extends State<FixedBookingScreen>
                                   : _handlePayment,
                               style: ElevatedButton.styleFrom(
                                 foregroundColor: Colors.white,
-                                backgroundColor: Colors.green,
+                                backgroundColor: AppColors.accent,
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(8)),
                                 disabledBackgroundColor: Colors.grey,
@@ -1106,7 +1107,7 @@ class _FixedBookingScreenState extends State<FixedBookingScreen>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SizedBox(
-                      width: 140,
+                      width: 136,
                       height: 40,
                       child: TextField(
                         readOnly: true,
@@ -1134,7 +1135,7 @@ class _FixedBookingScreenState extends State<FixedBookingScreen>
                     const SizedBox(width: 8),
                     if (_isFixedWithEndDate)
                       SizedBox(
-                        width: 140,
+                        width: 136,
                         height: 40,
                         child: TextField(
                           readOnly: true,
@@ -1210,8 +1211,7 @@ class _FixedBookingScreenState extends State<FixedBookingScreen>
                     showCheckmark: true,
                     label: Text(_getVnDay(day)),
                     selected: isSelected,
-                    selectedColor: const Color.fromARGB(
-                        255, 89, 146, 192), // Màu xanh khi được chọn
+                    selectedColor: AppColors.accent,
                     labelStyle: TextStyle(
                       color: isSelected
                           ? Colors.white
@@ -1235,8 +1235,7 @@ class _FixedBookingScreenState extends State<FixedBookingScreen>
                   showCheckmark: false,
                   label: const Text('Tất cả'),
                   selected: _selectedDays.length == _daysOfWeek.length,
-                  selectedColor: const Color.fromARGB(
-                      255, 32, 98, 149), // Màu xanh khi được chọn
+                  selectedColor: AppColors.accent,
                   labelStyle: TextStyle(
                     color: _selectedDays.length == _daysOfWeek.length
                         ? Colors.white
@@ -1282,72 +1281,71 @@ class _FixedBookingScreenState extends State<FixedBookingScreen>
                   style: Theme.of(context).textTheme.titleMedium),
               SizedBox(
                 height: 250,
-                child: SingleChildScrollView(
-                  child: Wrap(
-                    spacing: 8.0,
-                    runSpacing: 4.0,
-                    children: _allTimeSlots.map((slot) {
-                      final isSelected = _selectedTimeSlotIds.contains(slot.id);
-                      final isAvailable =
-                          _availableTimeSlotIds.contains(slot.id);
-                      print(
-                          "FilterChip slot ${slot.id}: isAvailable=$isAvailable, isSelected=$isSelected");
+                child: GridView.count(
+                  crossAxisCount: 3, // Chia thành 3 cột
+                  crossAxisSpacing: 8.0, // Khoảng cách ngang giữa các cột
+                  mainAxisSpacing: 8.0, // Khoảng cách dọc giữa các hàng
+                  childAspectRatio: 3.0, // Tỷ lệ chiều rộng/chiều cao của mỗi ô
+                  children: _allTimeSlots.map((slot) {
+                    final isSelected = _selectedTimeSlotIds.contains(slot.id);
+                    final isAvailable = _availableTimeSlotIds.contains(slot.id);
+                    print(
+                        "Grid slot ${slot.id}: isAvailable=$isAvailable, isSelected=$isSelected");
 
-                      return FilterChip(
-                        showCheckmark: false,
-                        label: Text(
-                          '${slot.startTimeString} - ${slot.endTimeString}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: isSelected
-                                ? Colors.white
-                                : (isAvailable ? Colors.black : Colors.grey),
-                          ),
+                    return FilterChip(
+                      showCheckmark: false,
+                      label: Text(
+                        '${slot.startTimeString} - ${slot.endTimeString}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isSelected
+                              ? Colors.white
+                              : (isAvailable ? Colors.black : Colors.grey),
                         ),
-                        selected: isSelected,
-                        backgroundColor: isAvailable ? null : Colors.grey[300],
-                        selectedColor: Colors.blue,
-                        labelPadding: const EdgeInsets.symmetric(
-                            horizontal: 8.0, vertical: 0.0),
-                        onSelected: (selected) async {
-                          // Loại bỏ điều kiện isAvailable để luôn cho phép nhả
-                          if (selected) {
-                            final success = await _checkAndHoldSlot(slot.id);
-                            if (success) {
-                              setState(() {
-                                _selectedTimeSlotIds.add(slot.id);
-                              });
-                            }
-                          } else {
-                            final holdIds = _holdIds[slot.id];
-                            if (holdIds != null && holdIds.isNotEmpty) {
-                              try {
-                                final success = await _slotService
-                                    .releaseMultipleSlots(holdIds);
-                                if (success) {
-                                  setState(() {
-                                    _selectedTimeSlotIds.remove(slot.id);
-                                    _holdIds.remove(slot.id);
-                                  });
-                                  await _fetchSlotAvailability(); // Cập nhật lại danh sách
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                        content: Text('Không thể bỏ giữ slot')),
-                                  );
-                                }
-                              } catch (e) {
+                      ),
+                      selected: isSelected,
+                      backgroundColor: isAvailable ? null : Colors.grey[300],
+                      selectedColor: Colors.blue,
+                      labelPadding: const EdgeInsets.symmetric(
+                          horizontal: 8.0, vertical: 0.0),
+                      onSelected: (selected) async {
+                        // Loại bỏ điều kiện isAvailable để luôn cho phép nhả
+                        if (selected) {
+                          final success = await _checkAndHoldSlot(slot.id);
+                          if (success) {
+                            setState(() {
+                              _selectedTimeSlotIds.add(slot.id);
+                            });
+                          }
+                        } else {
+                          final holdIds = _holdIds[slot.id];
+                          if (holdIds != null && holdIds.isNotEmpty) {
+                            try {
+                              final success = await _slotService
+                                  .releaseMultipleSlots(holdIds);
+                              if (success) {
+                                setState(() {
+                                  _selectedTimeSlotIds.remove(slot.id);
+                                  _holdIds.remove(slot.id);
+                                });
+                                await _fetchSlotAvailability(); // Cập nhật lại danh sách
+                              } else {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                      content: Text('Lỗi khi bỏ giữ slot: $e')),
+                                  const SnackBar(
+                                      content: Text('Không thể bỏ giữ slot')),
                                 );
                               }
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content: Text('Lỗi khi bỏ giữ slot: $e')),
+                              );
                             }
                           }
-                        },
-                      );
-                    }).toList(),
-                  ),
+                        }
+                      },
+                    );
+                  }).toList(),
                 ),
               ),
               const SizedBox(height: 20),

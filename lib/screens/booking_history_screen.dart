@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:focus_badminton/main_screen.dart';
+import 'package:focus_badminton/screens/profile_screen.dart';
+import 'package:focus_badminton/utils/colors.dart';
 import 'package:intl/intl.dart';
 import '../models/booking.dart';
 import '../api_services/booking_service.dart';
@@ -32,12 +34,13 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
   }
 
   void _handlePop() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const MainScreen(),
-      ),
-    );
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Không thể quay lại')),
+      );
+    }
   }
 
   @override
@@ -52,7 +55,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Lịch sử đặt sân'),
-          backgroundColor: Colors.blue[800],
+          backgroundColor: AppColors.accent,
           elevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
@@ -61,7 +64,6 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
         ),
         body: Column(
           children: [
-            _buildHeader(),
             Expanded(
               child: FutureBuilder<List<BookingDTO>>(
                 future: _bookingHistoryFuture,
@@ -89,28 +91,6 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.blue[800]!, Colors.blue[600]!],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-      ),
-      child: const Text(
-        'Danh sách đặt sân của bạn',
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 24,
-          fontWeight: FontWeight.bold,
         ),
       ),
     );

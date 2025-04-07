@@ -6,7 +6,6 @@ import 'package:focus_badminton/screens/register_screen.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'dart:io';
-
 import 'booking_history_screen.dart';
 
 class ProfileScreen extends StatefulWidget {

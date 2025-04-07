@@ -161,7 +161,7 @@ class ConcreteBookingMediator implements BookingMediator {
 
       // Sao chép _currentBooking trước khi gửi request để tránh bị thay đổi
       final bookingCopy = BookingDTO(
-        memberId: _currentBooking!.memberId,
+        memberId: int.parse(_memberId!),
         amount: _currentBooking!.amount,
         deposit: _currentBooking!.deposit,
         details: List.from(_currentBooking!.details ?? []),

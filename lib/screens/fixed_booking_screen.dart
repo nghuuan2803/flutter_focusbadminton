@@ -1165,11 +1165,11 @@ class _FixedBookingScreenState extends State<FixedBookingScreen>
                 IconButton(
                   onPressed: _resetSelections,
                   icon: const Icon(Icons.refresh),
-                  color: Colors.red,
+                  color: Colors.white,
                   iconSize: 24,
                   tooltip: 'Reset',
                   style: IconButton.styleFrom(
-                    backgroundColor: Colors.red.withOpacity(0.1),
+                    backgroundColor: AppColors.accent,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),

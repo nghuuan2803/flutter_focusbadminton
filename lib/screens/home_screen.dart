@@ -151,6 +151,8 @@ class _HomeWidgetState extends State<HomeWidget> {
                   }
 
                   final userInfo = snapshot.data ?? {'name': 'Khách'};
+                  final avatarUrl = userInfo['avatar'] ??
+                      'https://i.pinimg.com/736x/8f/1c/a2/8f1ca2029e2efceebd22fa05cca423d7.jpg';
                   print("UserInfo: $userInfo");
                   return Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -158,8 +160,7 @@ class _HomeWidgetState extends State<HomeWidget> {
                     children: [
                       CircleAvatar(
                         radius: 45,
-                        backgroundImage: NetworkImage(
-                            'https://i.pinimg.com/736x/8f/1c/a2/8f1ca2029e2efceebd22fa05cca423d7.jpg'),
+                        backgroundImage: NetworkImage(avatarUrl),
                       ),
                       SizedBox(height: 10),
                       Text(
@@ -732,7 +733,7 @@ class _HomeWidgetState extends State<HomeWidget> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     SizedBox(
-                      width: 94,
+                      width: 110,
                       child: ElevatedButton(
                         onPressed: () {},
                         style: ElevatedButton.styleFrom(

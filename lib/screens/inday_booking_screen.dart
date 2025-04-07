@@ -656,7 +656,7 @@ class _InDayBookingScreenState extends State<InDayBookingScreen>
       context: context,
       initialDate: endDate,
       firstDate: startDate,
-      lastDate: startDate.add(const Duration(days: 10)),
+      lastDate: startDate.add(const Duration(days: 7)),
     );
     if (picked != null && picked != endDate) {
       setState(() {
@@ -778,9 +778,11 @@ class _InDayBookingScreenState extends State<InDayBookingScreen>
                     backgroundColor: const Color.fromARGB(255, 255, 255, 255),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8)),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 8),
                 ElevatedButton.icon(
                   onPressed: () => _selectEndDate(context),
                   icon: const Icon(Icons.calendar_today, size: 18),
@@ -791,35 +793,35 @@ class _InDayBookingScreenState extends State<InDayBookingScreen>
                     backgroundColor: const Color.fromARGB(255, 255, 255, 255),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8)),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                ElevatedButton.icon(
+                const Spacer(), // Đẩy nút reset sang phải
+                ElevatedButton(
                   onPressed: _resetDates,
-                  icon: const Icon(Icons.refresh, size: 18),
-                  label: const Text('Đặt lại'),
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.white,
                     backgroundColor: Colors.lightBlue,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(5)),
+                    padding: const EdgeInsets.all(10),
+                    minimumSize: const Size(40, 40),
                   ),
+                  child: const Icon(Icons.refresh, size: 18),
                 ),
-                const SizedBox(width: 70),
-                Row(
-                  children: [
-                    const Text("Quay bảng", style: TextStyle(fontSize: 16)),
-                    const SizedBox(width: 8),
-                    Switch(
-                        value: isTimeSlotVertical,
-                        onChanged: _toggleTableView,
-                        activeColor: Colors.lightBlue),
-                  ],
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                const Text("Quay bảng", style: TextStyle(fontSize: 16)),
+                const SizedBox(width: 8),
+                Switch(
+                  value: isTimeSlotVertical,
+                  onChanged: _toggleTableView,
+                  activeColor: Colors.lightBlue,
                 ),
               ],
             ),

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
+import 'package:focus_badminton/api_services/auth_service.dart';
 import '../api_services/booking_service.dart';
 import '../api_services/payment_service.dart';
 import '../api_services/schedule_service.dart';
@@ -54,6 +55,9 @@ class _InDayBookingScreenState extends State<InDayBookingScreen>
   String selectedPaymentMethod = PaymentMethod.cash.name;
   bool isBottomSheetOpen = false; // Biến mới để theo dõi trạng thái sheet
 
+  String? _memberId;
+  AuthService? authService;
+
   @override
   void initState() {
     super.initState();
@@ -73,14 +77,18 @@ class _InDayBookingScreenState extends State<InDayBookingScreen>
     _appLinks = AppLinks();
     _initDeepLink();
     _loadInitialData();
+    _getMemberId();
+  }
+
+  Future<void> _getMemberId() async {
+    _memberId = await AuthService.getMemberId();
   }
 
   Future<void> _loadInitialData() async {
     setState(() => isLoading = true);
     try {
       await _mediator.loadSchedules(widget.courtId, startDate, endDate);
-      availableVouchers =
-          await _mediator.loadVouchers(1); // Giả lập memberId = 1
+      availableVouchers = await _mediator.loadVouchers();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Lỗi khi tải dữ liệu: $e')),
@@ -114,9 +122,14 @@ class _InDayBookingScreenState extends State<InDayBookingScreen>
 
   Future<void> _updateSlot(BuildContext context, Slot slot) async {
     try {
+      print("screen -update slot - heldby: ${slot.heldBy}");
+      print("screen -update slot - memberId: ${_memberId}");
+      print("screen -update slot - status: ${slot.status}");
+      int heldby = slot.heldBy == null ? 0 : int.parse(slot.heldBy!);
+      int memberId = int.parse(_memberId!);
       if (slot.status == 1) {
         await _mediator.holdSlot(slot);
-      } else if (slot.status == 2 && slot.heldBy == "1") {
+      } else if (slot.status == 2 && slot.heldBy! == _memberId!) {
         await _mediator.releaseSlot(slot);
       }
     } catch (e) {
@@ -546,7 +559,9 @@ class _InDayBookingScreenState extends State<InDayBookingScreen>
                                 ),
                               );
                               return SlotCard(
-                                  schedule: slot, onSlotUpdate: _updateSlot);
+                                  userId: _memberId!,
+                                  schedule: slot,
+                                  onSlotUpdate: _updateSlot);
                             }).toList(),
                           ))
                       .toList(),
@@ -629,7 +644,9 @@ class _InDayBookingScreenState extends State<InDayBookingScreen>
                                   ),
                                 );
                                 return SlotCard(
-                                    schedule: slot, onSlotUpdate: _updateSlot);
+                                    userId: _memberId!,
+                                    schedule: slot,
+                                    onSlotUpdate: _updateSlot);
                               }).toList(),
                             ))
                         .toList(),

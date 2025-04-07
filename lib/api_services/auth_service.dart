@@ -101,6 +101,7 @@ class AuthService {
         // Lưu lại accessToken & refreshToken nếu cần
       } else {
         print("❌ Đăng nhập thất bại: ${response.body}");
+        await GoogleSignInService.logout();
         return false;
       }
     } catch (e) {

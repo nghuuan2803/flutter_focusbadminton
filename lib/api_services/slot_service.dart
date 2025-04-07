@@ -16,6 +16,7 @@ class SlotService {
     required int bookingType,
   }) async {
     final memberId = await AuthService.getMemberId();
+    print("hold slot service - memberId: $memberId");
     final url = '$baseUrl/slot/hold';
     final body = jsonEncode({
       'CourtId': courtId,

@@ -4,6 +4,7 @@ import 'package:focus_badminton/provider/notification_provider.dart';
 import 'main_screen.dart';
 import 'dart:io';
 import 'package:provider/provider.dart';
+import './screens/splash_screen.dart';
 
 class MyHttpOverrides extends HttpOverrides {
   @override
@@ -31,7 +32,8 @@ class MainApp extends StatelessWidget {
       ],
       child: const MaterialApp(
         debugShowCheckedModeBanner: false,
-        home: MainScreen(),
+        // home: MainScreen(),
+        home: SplashScreen(),
       ),
     );
   }

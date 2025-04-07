@@ -52,6 +52,7 @@ class _InDayBookingScreenState extends State<InDayBookingScreen>
   AppLinks? _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
   String selectedPaymentMethod = PaymentMethod.cash.name;
+  bool isBottomSheetOpen = false; // Biến mới để theo dõi trạng thái sheet
 
   @override
   void initState() {
@@ -96,17 +97,17 @@ class _InDayBookingScreenState extends State<InDayBookingScreen>
         ..sort((a, b) => a.inMinutes.compareTo(b.inMinutes));
       selectedSlots = newSelectedSlots;
       currentBooking = newBooking;
-      // Đồng bộ selectedPaymentMethod với currentBooking
       selectedPaymentMethod =
           currentBooking?.paymentMethod.name ?? PaymentMethod.cash.name;
+
       // Logic hiển thị/ẩn Bottom Sheet
-      if (selectedSlots.isNotEmpty && _bottomSheetController == null) {
+      if (selectedSlots.isNotEmpty && !isBottomSheetOpen) {
         _showPersistentBottomSheet();
-      } else if (selectedSlots.isEmpty && _bottomSheetController != null) {
-        _bottomSheetController!.close();
-        _bottomSheetController = null;
-      } else if (_bottomSheetController != null) {
-        _bottomSheetController!.setState!(() {});
+      } else if (selectedSlots.isEmpty && isBottomSheetOpen) {
+        _bottomSheetController?.close();
+        isBottomSheetOpen = false;
+      } else if (isBottomSheetOpen) {
+        _bottomSheetController?.setState!(() {});
       }
     });
   }
@@ -129,12 +130,11 @@ class _InDayBookingScreenState extends State<InDayBookingScreen>
     if (isProcessing || currentBooking == null) return;
     setState(() => isProcessing = true);
     try {
-      // Lưu paymentMethod trước khi gọi createBooking
       final paymentMethod = currentBooking!.paymentMethod;
       final bookingId = await _mediator.createBooking();
       if (bookingId != null) {
         if (paymentMethod == PaymentMethod.cash) {
-          _showPaymentResultModal(true, bookingId); // Hiển thị modal
+          _showPaymentResultModal(true, bookingId);
         } else {
           debugPrint(
               "Waiting for deep link callback for payment method: $paymentMethod");
@@ -185,10 +185,10 @@ class _InDayBookingScreenState extends State<InDayBookingScreen>
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => PopScope(
-        canPop: false, // Ngăn back mặc định
+        canPop: false,
         onPopInvoked: (didPop) {
           if (!didPop) {
-            Navigator.of(dialogContext).pop(); // Đóng modal khi bấm back
+            Navigator.of(dialogContext).pop();
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (_) => const MainScreen()),
@@ -202,11 +202,12 @@ class _InDayBookingScreenState extends State<InDayBookingScreen>
 
   void _showPersistentBottomSheet() {
     _bottomSheetController?.close();
+
     _bottomSheetController = _scaffoldKey.currentState!.showBottomSheet(
       (context) => DraggableScrollableSheet(
-        initialChildSize: 1,
-        minChildSize: 1,
-        maxChildSize: 1,
+        initialChildSize: 0.2,
+        minChildSize: 0.2,
+        maxChildSize: 0.8,
         expand: false,
         builder: (_, scrollController) => StatefulBuilder(
           builder: (_, setBottomSheetState) {
@@ -262,7 +263,7 @@ class _InDayBookingScreenState extends State<InDayBookingScreen>
                                           title: Text(
                                               '${slot.courtName} - ${slot.beginAt?.toString().substring(0, 16)}'),
                                           subtitle: Text(
-                                              'Giá: ${Format.formatVNCurrency(slot.price)}'), // Hiển thị giá từ API
+                                              'Giá: ${Format.formatVNCurrency(slot.price)}'),
                                           trailing: IconButton(
                                             icon: const Icon(Icons.delete,
                                                 color: Colors.red),
@@ -328,8 +329,7 @@ class _InDayBookingScreenState extends State<InDayBookingScreen>
                                 selectedVoucher = value;
                                 if (currentBooking != null) {
                                   currentBooking!.applyVoucher(selectedVoucher);
-                                  _mediator
-                                      .updateUI(); // Cập nhật UI sau khi áp dụng voucher
+                                  _mediator.updateUI();
                                 }
                               });
                             },
@@ -344,7 +344,6 @@ class _InDayBookingScreenState extends State<InDayBookingScreen>
                                         fontSize: 16,
                                         fontWeight: FontWeight.w600)),
                                 Text(
-                                  // Sửa logic hiển thị ở đây
                                   '-${_getFormattedDiscount()}',
                                   style: const TextStyle(
                                       fontSize: 16,
@@ -363,7 +362,7 @@ class _InDayBookingScreenState extends State<InDayBookingScreen>
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600)),
                               Text(
-                                _calculateFinalAmount(), // Sử dụng phương thức mới
+                                _calculateFinalAmount(),
                                 style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
@@ -390,8 +389,7 @@ class _InDayBookingScreenState extends State<InDayBookingScreen>
                                 onTap: () {
                                   setBottomSheetState(() {
                                     selectedPaymentMethod = method.name;
-                                    _mediator.updatePaymentMethod(
-                                        method); // Gọi mediator để cập nhật
+                                    _mediator.updatePaymentMethod(method);
                                   });
                                 },
                                 child: Card(
@@ -468,6 +466,16 @@ class _InDayBookingScreenState extends State<InDayBookingScreen>
         ),
       ),
     );
+
+    setState(() {
+      isBottomSheetOpen = true; // Đánh dấu sheet đang mở
+    });
+
+    _bottomSheetController!.closed.then((_) {
+      setState(() {
+        isBottomSheetOpen = false; // Đánh dấu sheet đã đóng
+      });
+    });
   }
 
   Widget _buildDefaultTable() {
@@ -707,6 +715,7 @@ class _InDayBookingScreenState extends State<InDayBookingScreen>
 
   bool _isSameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
+
   String _getFormattedDiscount() {
     if (selectedVoucher == null || currentBooking == null) {
       return Format.formatVNCurrency(0);
@@ -715,12 +724,9 @@ class _InDayBookingScreenState extends State<InDayBookingScreen>
     final voucher = selectedVoucher!;
     final total = currentBooking!.amount;
 
-    // Xử lý logic giảm giá
     if (voucher.discountType == 0) {
-      // Loại cố định
       return Format.formatVNCurrency(voucher.value);
     } else {
-      // Loại phần trăm + check maximum
       double discount = (total * voucher.value) / 100;
       if (voucher.maximumValue > 0 && discount > voucher.maximumValue) {
         discount = voucher.maximumValue;
@@ -735,10 +741,8 @@ class _InDayBookingScreenState extends State<InDayBookingScreen>
 
     double discount = 0;
     if (selectedVoucher!.discountType == 0) {
-      // Giảm cố định
       discount = selectedVoucher!.value;
     } else {
-      // Giảm phần trăm (kiểm tra giá trị tối đa)
       discount = (total * selectedVoucher!.value) / 100;
       if (selectedVoucher!.maximumValue > 0 &&
           discount > selectedVoucher!.maximumValue) {
@@ -797,7 +801,7 @@ class _InDayBookingScreenState extends State<InDayBookingScreen>
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
                 ),
-                const Spacer(), // Đẩy nút reset sang phải
+                const Spacer(),
                 ElevatedButton(
                   onPressed: _resetDates,
                   style: ElevatedButton.styleFrom(

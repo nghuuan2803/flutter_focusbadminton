@@ -41,8 +41,8 @@ class _SplashScreenState extends State<SplashScreen> {
             // Logo hoặc hình ảnh
             Image.asset(
               'assets/images/logo.png', // Thay bằng đường dẫn đến logo của bạn
-              width: 150,
-              height: 150,
+              width: 2000,
+              height: 200,
             ),
             const SizedBox(height: 20),
             // Tên ứng dụng

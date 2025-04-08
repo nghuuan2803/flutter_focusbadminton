@@ -3,6 +3,7 @@ import 'package:focus_badminton/api_services/auth_service.dart';
 import 'package:focus_badminton/screens/login_screen.dart';
 import 'package:focus_badminton/screens/personal_info.dart';
 import 'package:focus_badminton/screens/register_screen.dart';
+import 'package:focus_badminton/screens/team_screen.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'dart:io';
@@ -116,7 +117,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         _buildOptionTile(
                           icon: Icons.group,
                           title: 'Đội Nhóm',
-                          onTap: () {},
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const TeamScreen()),
+                            );
+                          },
                           screenWidth: screenWidth,
                         ),
                         _buildOptionTile(

@@ -5,6 +5,8 @@ import 'package:focus_badminton/api_services/vouchers_service.dart';
 import 'package:focus_badminton/models/banner_model.dart';
 import 'package:focus_badminton/provider/cart_provider.dart';
 import 'package:focus_badminton/provider/notification_provider.dart';
+import 'package:focus_badminton/screens/booking_screen.dart';
+import 'package:focus_badminton/screens/team_screen.dart';
 import 'package:provider/provider.dart';
 import '../models/voucher.dart';
 import '../models/product.dart';
@@ -13,6 +15,7 @@ import 'package:focus_badminton/screens/fixed_booking_screen.dart';
 import 'package:focus_badminton/screens/inday_booking_screen.dart';
 import '../utils/colors.dart';
 import '../utils/format.dart';
+import '../main_screen.dart';
 
 class HomeWidget extends StatefulWidget {
   const HomeWidget({super.key});
@@ -180,15 +183,21 @@ class _HomeWidgetState extends State<HomeWidget> {
               leading: Icon(Icons.home, color: AppColors.textColor),
               title: Text('Trang chủ'),
               onTap: () {
-                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const MainScreen()),
+                );
               },
             ),
             ListTile(
               leading:
                   Icon(Icons.schedule_outlined, color: AppColors.textColor),
-              title: Text('Đặt sân'),
+              title: Text('Đặt sân '),
               onTap: () {
-                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const MainScreen()),
+                );
               },
             ),
             ListTile(
@@ -206,11 +215,13 @@ class _HomeWidgetState extends State<HomeWidget> {
               },
             ),
             ListTile(
-              leading: Icon(Icons.theater_comedy_rounded,
-                  color: AppColors.textColor),
+              leading: Icon(Icons.group, color: AppColors.textColor),
               title: Text('Đội nhóm'),
               onTap: () {
-                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const TeamScreen()),
+                );
               },
             ),
             ListTile(
